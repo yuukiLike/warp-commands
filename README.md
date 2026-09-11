@@ -2,30 +2,30 @@
 
 English · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
-**Local-first YAML workflows for Warp.**
+**Commands I use in Warp. Maybe you'll find them useful too.**
 
 ![Warp Commands — Local-first YAML workflows. Search. Fill. Run.](assets/warp-cover.png)
-
-Searchable shortcuts for Git, macOS, Windows, Claude Code, and everyday development. Short English command names; Chinese descriptions and comments.
 
 [local-first](https://github.com/topics/local-first) · [warp](https://github.com/topics/warp) · [yaml](https://github.com/topics/yaml)
 
 ## You might need these
 
-- **Fix macOS Caps Lock delay** — [mac caps delay](mac/mac-caps-delay.yaml): a one-line `hidutil` fix, verified on the author's Mac.
-- **See your projects at a glance with eza** — [projects](mac/projects.yaml): project names, Git branches, and status in one table. Requires `eza`; defaults to `~/codex`, which you can change.
+- **macOS Caps Lock delay** — [mac caps delay](mac/mac-caps-delay.yaml): one `hidutil` command fixed this on my Mac.
+- **A project overview with eza** — [projects](mac/projects.yaml): I use this to see project names, Git branches, and status together. Install `eza` first; change `~/codex` to your own projects directory.
 
-## Quick start
+## Try them
 
-1. **Import** — In Warp Drive, click your personal workspace's **+ → Import**. Select YAML files or a category folder such as `mac/`.
-2. **Search** — Find a command in Warp, such as `mac clipboard` or `npm registry`.
-3. **Run** — Select the workflow, fill in its arguments, and run it.
+1. **Download** — [Download the ZIP](https://github.com/yuukiLike/warp-commands/archive/refs/heads/main.zip) and extract it.
+2. **Import** — Open Warp Drive → personal workspace **+ → Import**. Select the `.yaml` files you want, or a command folder such as `mac/` or `git/` inside the extracted repository. **Do not select the repository's top-level folder.**
+3. **Use** — Search for a command such as `mac clipboard`, select it, fill in the arguments, and run.
+
+`assets/` contains README images; `README*.md` and `notes/` are documentation. **Leave these out of the import.**
 
 ![Warp Drive: personal workspace + menu → Import](assets/warp-import.png)
 
 Warp Drive imports a synced copy. Keep the repository YAML as your source. [Import guide →](https://docs.warp.dev/knowledge-and-collaboration/warp-drive/#importing-files-into-warp-drive)
 
-## Commands
+## Pick what you need
 
 | Folder | Contents |
 | --- | --- |

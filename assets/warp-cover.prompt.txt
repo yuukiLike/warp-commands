@@ -11,3 +11,24 @@ Palette: near-black charcoal, off-white typography, muted gray secondary text, a
 Text (verbatim): main title "Warp Commands" (may span two lines); subtitle "Local-first YAML workflows"; smaller supporting line "Search. Fill. Run."; small understated footer labels "local-first", "warp", "yaml".
 Constraints: Preserve the real screenshot's redactions and menu labels, especially "Import". All added text must be spelled exactly, crisp, and highly legible. The design promotes this personal YAML collection; it must not imply official Warp endorsement or that all Warp features are offline. Do not invent UI features, workflow counts, stars, badges, a logo, personal details, or executable code.
 Avoid: stock laptop mockups, mascots, neon cyberpunk, purple gradients, excessive glowing effects, noisy textures, decorative icon clutter, fake screenshots, watermarks.
+
+
+Highlight correction
+Tool: built-in image_gen
+Source images: assets/warp-import.png and assets/warp-cover.png from commit 7375b9f.
+
+Target: assets/warp-import.png
+Use case: precise-object-edit
+Primary request: Correct only the highlighted menu item in this Warp Drive image.
+Input image 1: edit target.
+Required edit: Move the cyan/blue selection highlight from the "Prompt" row to the bottom "Import" row in the open + menu. "Prompt" must become an ordinary unselected row, with the same dark gray background and light gray text/icon as "Workflow" and "Notebook". "Import" must have the exact cyan/blue selection color used by the original Prompt row, with dark text and icon. Exactly one row, "Import", must be highlighted.
+Invariants: Preserve all other pixels and content as closely as possible: exact composition, canvas aspect ratio, typography, text spelling, icons, folder names, panel geometry, background, and privacy redaction. Never reconstruct or change the pixel-blurred account identity. Do not add arrows, labels, callouts, or any other new elements. This is a minimal screenshot correction, not a redesign.
+Asset type: the original rectangular tutorial screenshot. Preserve the 1322 × 590 canvas and the full original crop. The Import row is the final row of the floating menu.
+
+Target: assets/warp-cover.png
+Use case: precise-object-edit
+Primary request: Correct only the highlighted menu item in this Warp Drive image.
+Input image 1: edit target.
+Required edit: Move the cyan/blue selection highlight from the "Prompt" row to the bottom "Import" row in the open + menu. "Prompt" must become an ordinary unselected row, with the same dark gray background and light gray text/icon as "Workflow" and "Notebook". "Import" must have the exact cyan/blue selection color used by the original Prompt row, with dark text and icon. Exactly one row, "Import", must be highlighted.
+Invariants: Preserve all other pixels and content as closely as possible: exact composition, canvas aspect ratio, typography, text spelling, icons, folder names, panel geometry, background, and privacy redaction. Never reconstruct or change the pixel-blurred account identity. Do not add arrows, labels, callouts, or any other new elements. This is a minimal screenshot correction, not a redesign.
+Asset type: the existing landscape promotional cover. Preserve the 1774 × 887 canvas, the entire left typography, cyan frame and dark background, and all headline/subtitle/footer copy exactly. Only change the menu selection inside the screenshot panel on the right.

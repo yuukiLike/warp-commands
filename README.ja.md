@@ -2,30 +2,30 @@
 
 [English](README.md) · [简体中文](README.zh-CN.md) · 日本語
 
-**Warp 向けのローカルファーストな YAML コマンド集。**
+**普段使っている Warp コマンド。あなたにも役立つものがあれば。**
 
 ![Warp Commands — ローカルファーストの YAML ワークフロー：検索、入力、実行](assets/warp-cover.png)
-
-Git、macOS、Windows、Claude Code、日々の開発に使うコマンドをまとめています。コマンド名は短い英語、説明とコメントは中国語です。
 
 [local-first](https://github.com/topics/local-first) · [warp](https://github.com/topics/warp) · [yaml](https://github.com/topics/yaml)
 
 ## こんなときに
 
-- **macOS の Caps Lock 遅延を解消** — [mac caps delay](mac/mac-caps-delay.yaml)：`hidutil` の1行で設定。作者の Mac で動作確認済みです。
-- **eza でプロジェクトをひと目で確認** — [projects](mac/projects.yaml)：プロジェクト名、Git ブランチ、状態を一覧表示。`eza` が必要です。対象ディレクトリはデフォルトで `~/codex` ですが、変更できます。
+- **macOS の Caps Lock 遅延** — [mac caps delay](mac/mac-caps-delay.yaml)：私の Mac では、この `hidutil` コマンドで解消できました。
+- **eza でプロジェクトを一覧表示** — [projects](mac/projects.yaml)：プロジェクト名、Git ブランチ、状態をまとめて見るために使っています。先に `eza` をインストールし、`~/codex` を自分のプロジェクト用ディレクトリに変更してください。
 
-## 使い方
+## 使ってみる
 
-1. **インポート** — Warp Drive で個人用ワークスペースの **+ → Import** を開き、YAML ファイルか `mac/` などのカテゴリフォルダを選びます。
-2. **検索** — Warp で `mac clipboard` や `npm registry` などのコマンドを検索します。
-3. **実行** — ワークフローを選び、引数を入力して実行します。
+1. **ダウンロード** — [ZIP をダウンロード](https://github.com/yuukiLike/warp-commands/archive/refs/heads/main.zip)して展開します。
+2. **インポート** — Warp Drive → 個人用ワークスペースの **+ → Import** を開きます。展開したリポジトリの中から、必要な `.yaml` ファイルか `mac/`、`git/` などのコマンド用フォルダを選びます。**リポジトリ全体のフォルダは選ばないでください。**
+3. **実行** — `mac clipboard` などを検索し、ワークフローを選んで引数を入力し、実行します。
+
+`assets/` は README 用の画像、`README*.md` と `notes/` は説明や参考ノートです。**これらのインポートは不要です。**
 
 ![Warp Drive：個人用ワークスペースの + メニュー → Import](assets/warp-import.png)
 
 インポートすると、Warp Drive で同期されるコピーが作成されます。元の YAML はリポジトリで管理してください。[インポートガイド →](https://docs.warp.dev/knowledge-and-collaboration/warp-drive/#importing-files-into-warp-drive)
 
-## コマンド一覧
+## 必要なものを選ぶ
 
 | フォルダ | 内容 |
 | --- | --- |

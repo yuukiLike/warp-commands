@@ -15,8 +15,13 @@
 
 ## 怎么用
 
-1. **下载** — [下载 ZIP](https://github.com/yuukiLike/warp-commands/archive/refs/heads/main.zip) 并解压。
-2. **导入** — 打开 Warp Drive → 个人空间 **+ → Import**。进入解压后的仓库，选择需要的 `.yaml` 文件，也可以选择 `mac/`、`git/` 等命令分类文件夹。**不要直接选择整个仓库文件夹。**
+1. **克隆**
+
+   ```sh
+   git clone https://github.com/yuukiLike/warp-commands.git
+   ```
+
+2. **导入** — 打开 Warp Drive → 个人空间 **+ → Import**。进入克隆下来的 `warp-commands/`，选择需要的 `.yaml` 文件，也可以选择 `mac/`、`git/` 等命令分类文件夹。**不要直接选择整个仓库文件夹。**
 3. **使用** — 搜索 `mac clipboard` 等命令，选中工作流，填写参数，然后运行。
 
 `assets/` 放的是 README 配图，`README*.md` 和 `notes/` 是说明文档与参考笔记，**这些都不用导入**。

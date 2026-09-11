@@ -15,8 +15,13 @@
 
 ## 使ってみる
 
-1. **ダウンロード** — [ZIP をダウンロード](https://github.com/yuukiLike/warp-commands/archive/refs/heads/main.zip)して展開します。
-2. **インポート** — Warp Drive → 個人用ワークスペースの **+ → Import** を開きます。展開したリポジトリの中から、必要な `.yaml` ファイルか `mac/`、`git/` などのコマンド用フォルダを選びます。**リポジトリ全体のフォルダは選ばないでください。**
+1. **クローン**
+
+   ```sh
+   git clone https://github.com/yuukiLike/warp-commands.git
+   ```
+
+2. **インポート** — Warp Drive → 個人用ワークスペースの **+ → Import** を開きます。クローンした `warp-commands/` の中から、必要な `.yaml` ファイルか `mac/`、`git/` などのコマンド用フォルダを選びます。**リポジトリ全体のフォルダは選ばないでください。**
 3. **実行** — `mac clipboard` などを検索し、ワークフローを選んで引数を入力し、実行します。
 
 `assets/` は README 用の画像、`README*.md` と `notes/` は説明や参考ノートです。**これらのインポートは不要です。**

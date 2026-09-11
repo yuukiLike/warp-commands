@@ -15,8 +15,13 @@ English · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
 ## Try them
 
-1. **Download** — [Download the ZIP](https://github.com/yuukiLike/warp-commands/archive/refs/heads/main.zip) and extract it.
-2. **Import** — Open Warp Drive → personal workspace **+ → Import**. Select the `.yaml` files you want, or a command folder such as `mac/` or `git/` inside the extracted repository. **Do not select the repository's top-level folder.**
+1. **Clone**
+
+   ```sh
+   git clone https://github.com/yuukiLike/warp-commands.git
+   ```
+
+2. **Import** — Open Warp Drive → personal workspace **+ → Import**. Inside the cloned `warp-commands/` folder, select the `.yaml` files you want or a command folder such as `mac/` or `git/`. **Do not select the repository's top-level folder.**
 3. **Use** — Search for a command such as `mac clipboard`, select it, fill in the arguments, and run.
 
 `assets/` contains README images; `README*.md` and `notes/` are documentation. **Leave these out of the import.**

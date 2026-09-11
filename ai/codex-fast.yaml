@@ -1,0 +1,11 @@
+---
+name: "codex fast"
+command: "codex -m \"{{model}}\" -c model_reasoning_effort=\"low\""
+description: "以较低的推理强度启动 Codex，可指定模型。请使用当前账号可用的模型。"
+arguments:
+  - name: "model"
+    arg_type: "Text"
+    description: "当前账号可用的模型 ID。"
+    default_value: "gpt-5.3-codex-spark"
+tags: ["codex", "ai"]
+shells: []

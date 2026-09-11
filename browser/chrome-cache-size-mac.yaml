@@ -1,0 +1,20 @@
+---
+name: "chrome cache size mac"
+command: |-
+  for cache in \
+    "$HOME/Library/Caches/Google/Chrome" \
+    "$HOME/Library/Application Support/Google/Chrome/Default/Cache" \
+    "$HOME/Library/Application Support/Google/Chrome/Default/Code Cache" \
+    "$HOME/Library/Application Support/Google/Chrome/Default/Service Worker" \
+    "$HOME/Library/Caches/Google/Chrome Canary" \
+    "$HOME/Library/Application Support/Google/Chrome Canary/Default/Cache" \
+    "$HOME/Library/Application Support/Google/Chrome Canary/Default/Code Cache"
+  do
+    if [ -d "$cache" ]; then
+      du -sh "$cache"
+    fi
+  done
+description: "查看 macOS 上 Chrome 和 Canary 的缓存占用，包含 Default 配置的 Cache、Code Cache 及 Chrome 的 Service Worker。"
+arguments: []
+tags: ["chrome", "cache", "mac"]
+shells: ["bash", "zsh"]

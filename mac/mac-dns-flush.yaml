@@ -1,0 +1,7 @@
+---
+name: "mac dns flush"
+command: "sudo dscacheutil -flushcache && sudo killall -HUP mDNSResponder"
+description: "清理 macOS DNS 缓存，需要管理员权限。"
+arguments: []
+tags: ["macos", "network", "system"]
+shells: ["bash", "zsh"]

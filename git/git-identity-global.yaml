@@ -1,0 +1,17 @@
+---
+name: "git identity global"
+command: |-
+  git config --global user.name "{{name}}"
+  git config --global user.email "{{email}}"
+description: "设置 Git 全局姓名和邮箱，作为默认提交作者信息；不影响 GitHub 登录认证。"
+arguments:
+  - name: "name"
+    arg_type: "Text"
+    description: "提交记录中显示的姓名。"
+    default_value: "Your Name"
+  - name: "email"
+    arg_type: "Text"
+    description: "提交记录中显示的邮箱，也可使用 GitHub noreply 邮箱。"
+    default_value: "you@example.com"
+tags: ["git"]
+shells: []

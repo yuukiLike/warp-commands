@@ -1,0 +1,24 @@
+---
+name: "chrome clear cache mac"
+command: |-
+  bash -c '
+  # Bash nullglob skips missing caches, including when launched from Zsh.
+  shopt -s nullglob
+  killall "Google Chrome" "Google Chrome Canary" 2>/dev/null
+  sleep 1
+  for cache in \
+    "$HOME/Library/Caches/Google/Chrome" \
+    "$HOME/Library/Application Support/Google/Chrome/Default/Cache" \
+    "$HOME/Library/Application Support/Google/Chrome/Default/Code Cache" \
+    "$HOME/Library/Application Support/Google/Chrome/Default/Service Worker" \
+    "$HOME/Library/Caches/Google/Chrome Canary" \
+    "$HOME/Library/Application Support/Google/Chrome Canary/Default/Cache" \
+    "$HOME/Library/Application Support/Google/Chrome Canary/Default/Code Cache"
+  do
+    rm -rf -- "$cache"/*
+  done
+  '
+description: "关闭 Chrome 和 Canary，清理 macOS 上原脚本列出的缓存内容，包含 Chrome Default/Service Worker。适用于 Bash/Zsh。"
+arguments: []
+tags: ["chrome", "cache", "mac"]
+shells: ["bash", "zsh"]

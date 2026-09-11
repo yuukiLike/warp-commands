@@ -1,0 +1,7 @@
+---
+name: "mac caps delay"
+command: "hidutil property --set '{\"CapsLockDelayOverride\":0}'"
+description: "将 CapsLockDelayOverride 设为 0，修复 macOS Caps Lock 按键延迟。此 hidutil 命令由用户提供并验证有效。"
+arguments: []
+tags: ["macos", "keyboard", "caps-lock", "system"]
+shells: ["bash", "zsh"]

@@ -1,0 +1,12 @@
+---
+name: "git rebuild erase history"
+command: |-
+  [ -d .git ] && [ ! -L .git ] &&
+    printf '输入 yes 确认清空本地 Git 历史：' &&
+    read -r rebuild_confirm && [ "$rebuild_confirm" = yes ] &&
+    rm -rf -- .git &&
+    git init && git add . && git commit -m "Initial commit"
+description: "危险：删除 .git，清空本地历史、分支、stash 和远程配置后重建仓库。仅在仓库根目录运行，输入 yes 确认执行。"
+arguments: []
+tags: ["git"]
+shells: ["bash", "zsh"]

@@ -1,0 +1,13 @@
+Tool: built-in image_gen
+Reference: warp-import.png (user-supplied screenshot)
+
+Use case: ads-marketing
+Asset type: a polished landscape cover for the README and social sharing of a personal command collection.
+Primary request: Create a beautiful, restrained promotional graphic for "Warp Commands", a collection of searchable local YAML workflows for the Warp terminal.
+Input image 1: supporting screenshot/compositing input — a real user-supplied Warp Drive screenshot with the Personal + menu open and Import visible. Incorporate this screenshot as the UI panel. Preserve its existing pixel-blurred account identity; never reconstruct, sharpen, replace, or invent identity details.
+Style: premium developer-tool editorial design, confident typography, minimal composition, excellent alignment and generous negative space.
+Composition: wide landscape, approximately 2:1. Large title in a clear left text column; the supplied screenshot in a crisp, straight-on dark rounded frame on the right, with subtle depth and a restrained cyan edge glow. Keep the whole screenshot coherent and readable, without perspective distortion. The panel should feel intentionally placed, with generous outer margins.
+Palette: near-black charcoal, off-white typography, muted gray secondary text, a small amount of cyan inspired by the screenshot. Very subtle atmosphere, no busy background.
+Text (verbatim): main title "Warp Commands" (may span two lines); subtitle "Local-first YAML workflows"; smaller supporting line "Search. Fill. Run."; small understated footer labels "local-first", "warp", "yaml".
+Constraints: Preserve the real screenshot's redactions and menu labels, especially "Import". All added text must be spelled exactly, crisp, and highly legible. The design promotes this personal YAML collection; it must not imply official Warp endorsement or that all Warp features are offline. Do not invent UI features, workflow counts, stars, badges, a logo, personal details, or executable code.
+Avoid: stock laptop mockups, mascots, neon cyberpunk, purple gradients, excessive glowing effects, noisy textures, decorative icon clutter, fake screenshots, watermarks.

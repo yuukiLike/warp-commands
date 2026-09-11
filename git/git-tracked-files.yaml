@@ -1,0 +1,38 @@
+---
+# .gitignore 速查：规则以这份 .gitignore 所在目录为基准，作用到其子目录。
+# 开头的 / 也相对这个目录；只有根目录的 .gitignore 才以仓库根目录为基准。
+#
+# cache        匹配任意层级名为 cache 的文件或目录。
+# cache/       匹配任意层级名为 cache 的目录；末尾 / 表示只匹配目录。
+# /cache       匹配与这份 .gitignore 同层的 cache 文件或目录。
+# /cache/      匹配与这份 .gitignore 同层的 cache 目录。
+# src/cache    与 /src/cache 等价：中间已有 /，路径就相对 .gitignore 所在目录。
+#              上一条不匹配 packages/src/cache；跨层匹配可写 **/src/cache。
+#
+# * 不跨越 /；a/**/b 中的 ** 可以匹配零层或多层目录。
+# src/* 直接匹配 src 下的一层条目；若匹配到目录，其下内容也会被忽略。
+#
+# 同一份文件中，最后一条匹配规则生效；! 用于取消之前的忽略。
+# 父目录已被忽略时，不能只用 ! 放回里面的文件。保留一个文件可按顺序写：
+# /cache/*
+# !/cache/keep.txt
+# 上例保留 cache/keep.txt；将第一行改成 /cache/ 就无法这样放回它。
+#
+# .gitignore 不影响已跟踪文件；需要停止跟踪时使用本集合的 git untrack 工作流。
+# 查看“匹配忽略规则但仍被跟踪”的文件：git ls-files -ci --exclude-standard
+# 排查规则来源和行号（包括已跟踪文件）：
+# git check-ignore -v --no-index -- "path/to/file"
+# 输出中的规则若以 ! 开头，表示取消忽略。
+# 参考：https://git-scm.com/docs/gitignore
+# 排查命令：https://git-scm.com/docs/git-check-ignore
+name: "git tracked files"
+command: "git ls-files -- \"{{path}}\""
+description: "列出指定路径下已被 Git 跟踪的文件，默认查看当前目录。注释包含 .gitignore 的斜杠、通配符、例外规则和排查方法。"
+arguments:
+  - name: "path"
+    arg_type: "Text"
+    description: "文件或目录路径；默认 . 表示当前目录及其子目录。"
+    default_value: "."
+tags: ["git", "gitignore"]
+shells: []
+source_url: "https://git-scm.com/docs/gitignore"

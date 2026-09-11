@@ -1,0 +1,39 @@
+---
+name: "projects"
+command: |-
+  # Requires eza; defaults to immediate project directories under ~/codex.
+  if ! command -v eza >/dev/null 2>&1; then
+    printf '%s\n' 'eza was not found. Install eza first.' >&2
+    false
+  elif [ ! -d "{{directory}}" ]; then
+    printf '%s\n' 'Project directory does not exist. Check the directory argument.' >&2
+    false
+  else
+    # Keep pipefail in a subshell so eza failures propagate without changing the caller.
+    (
+      set -o pipefail
+      eza -lD --git-repos --no-permissions --no-filesize --no-user --no-time \
+        --color=never --icons=never --hyperlink=never --no-quotes \
+        -I node_modules -- "{{directory}}" | awk '
+        BEGIN {
+          color = !("NO_COLOR" in ENVIRON) && system("test -t 1") == 0
+          printf "%-16s %-24s %s\n", "PROJECT", "BRANCH", "STATUS"
+        }
+        {
+          state = $1
+          branch = $2
+          sub(/^[^[:space:]]+[[:space:]]+[^[:space:]]+[[:space:]]+/, "")
+          description = state == "|" ? "clean" : state == "+" ? "local changes" : state == "-" ? "not a Git repo" : "status unknown"
+          style = state == "|" ? "30;106" : state == "-" ? "1;30;103" : "1;97;41"
+          printf "%-16s %-24s %s%s%s\n", $0, branch, color ? sprintf("\033[%sm", style) : "", description, color ? "\033[0m" : ""
+        }'
+    )
+  fi
+description: "使用 eza 查看项目名称、Git 分支和状态。默认目录为 ~/codex，支持路径空格，排除 node_modules，并遵循 NO_COLOR 设置。适用于 Bash/Zsh。"
+arguments:
+  - name: "directory"
+    arg_type: "Text"
+    description: "项目所在的父目录，默认 ~/codex，也可填写绝对路径。"
+    default_value: "$HOME/codex"
+tags: ["projects", "git", "eza", "development"]
+shells: ["bash", "zsh"]

@@ -1,0 +1,10 @@
+---
+name: "claude reset mac"
+command: |-
+  unset ANTHROPIC_AUTH_TOKEN ANTHROPIC_API_KEY ANTHROPIC_BASE_URL \
+    ANTHROPIC_MODEL ANTHROPIC_DEFAULT_SONNET_MODEL ANTHROPIC_DEFAULT_OPUS_MODEL \
+    ANTHROPIC_DEFAULT_HAIKU_MODEL CLAUDE_API_TOKEN CLAUDE_API_URL
+description: "清除当前终端中 Claude 的 API 地址、密钥和模型覆盖环境变量，适用于 macOS Bash/Zsh。配置文件中的设置仍会生效。"
+arguments: []
+tags: ["claude", "reset", "mac"]
+shells: ["bash", "zsh"]

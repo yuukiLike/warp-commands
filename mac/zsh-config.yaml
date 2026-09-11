@@ -1,0 +1,7 @@
+---
+name: "zsh config"
+command: "less \"$HOME/.zshrc\""
+description: "使用 less 查看 ~/.zshrc，按 q 退出。不会执行或修改该文件。"
+arguments: []
+tags: ["zsh", "macos", "configuration", "system"]
+shells: ["bash", "zsh"]

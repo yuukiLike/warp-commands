@@ -1,0 +1,11 @@
+---
+name: "git stash switch"
+command: "git stash push -m \"before branch switch\" && git switch \"{{branch}}\""
+description: "暂存已跟踪文件的更改，成功后切换分支。可用 git stash pop 恢复，需要 Bash、Zsh 或 PowerShell 7。"
+arguments:
+  - name: "branch"
+    arg_type: "Text"
+    description: "分支名称。"
+    default_value: "main"
+tags: ["git"]
+shells: []

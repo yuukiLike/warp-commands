@@ -1,0 +1,11 @@
+---
+name: "git diff files"
+command: "git diff --name-only \"{{ref}}\" --"
+description: "列出相对于指定版本发生变化的文件。默认比较 HEAD，也可用 HEAD~1 比较上一次提交之前的版本。不包含未跟踪文件。"
+arguments:
+  - name: "ref"
+    arg_type: "Text"
+    description: "要比较的版本，例如 HEAD、HEAD~1 或提交 ID。"
+    default_value: "HEAD"
+tags: ["git"]
+shells: []

@@ -1,0 +1,11 @@
+---
+name: "mac dns auto"
+command: "sudo networksetup -setdnsservers \"{{service}}\" Empty"
+description: "恢复指定 macOS 网络服务的自动 DNS 配置，之后可按需运行 mac dns flush。"
+arguments:
+  - name: "service"
+    arg_type: "Text"
+    description: "网络服务名称。"
+    default_value: "Wi-Fi"
+tags: ["macos", "network", "system"]
+shells: ["bash", "zsh"]

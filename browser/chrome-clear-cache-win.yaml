@@ -1,0 +1,18 @@
+---
+name: "chrome clear cache win"
+command: |-
+  #!/bin/bash
+
+  taskkill.exe //F //IM chrome.exe //IM chrome.exe 2>/dev/null
+  sleep 1
+
+  rm -rf "$LOCALAPPDATA/Google/Chrome/User Data/Default/Cache"/*
+  rm -rf "$LOCALAPPDATA/Google/Chrome/User Data/Default/Code Cache"/*
+  rm -rf "$LOCALAPPDATA/Google/Chrome SxS/User Data/Default/Cache"/*
+  rm -rf "$LOCALAPPDATA/Google/Chrome SxS/User Data/Default/Code Cache"/*
+
+  echo "Done"
+description: "关闭 Chrome 并清理 Stable 和 Canary 的 Default 配置缓存，适用于 Windows Git Bash。"
+arguments: []
+tags: ["chrome", "browser", "windows", "bash"]
+shells: ["bash"]

@@ -1,0 +1,17 @@
+---
+# automatic 使用 -setv6automatic，恢复 IPv6 自动配置。
+# off 使用 -setv6off，关闭 IPv6；需要恢复时将 mode 改回 automatic。
+name: "mac ipv6"
+command: "sudo networksetup \"-setv6{{mode}}\" \"{{service}}\""
+description: "切换指定 macOS 网络服务的 IPv6 配置：automatic 恢复自动，off 关闭。默认恢复自动，需要管理员权限。"
+arguments:
+  - name: "mode"
+    arg_type: "Text"
+    description: "automatic 恢复 IPv6 自动配置；off 关闭 IPv6。"
+    default_value: "automatic"
+  - name: "service"
+    arg_type: "Text"
+    description: "网络服务名称。"
+    default_value: "Wi-Fi"
+tags: ["macos", "network", "system"]
+shells: ["bash", "zsh"]

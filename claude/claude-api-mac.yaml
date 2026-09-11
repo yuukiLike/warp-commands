@@ -1,0 +1,24 @@
+---
+name: "claude api mac"
+command: |-
+  unset ANTHROPIC_API_KEY ANTHROPIC_AUTH_TOKEN
+  export ANTHROPIC_BASE_URL='{{base_url}}'
+  export {{auth_var}}='{{api_key}}'
+  claude
+description: "设置 API 地址和密钥并启动 Claude Code，仅当前终端生效。适用于 macOS Bash/Zsh；settings.json 中的同名环境变量会优先于这里的设置。"
+arguments:
+  - name: "base_url"
+    arg_type: "Text"
+    description: "服务商提供的 Anthropic Messages 兼容接口地址。"
+    default_value: null
+  - name: "api_key"
+    arg_type: "Text"
+    description: "服务商密钥，填入后会出现在执行的命令中。"
+    default_value: null
+  - name: "auth_var"
+    arg_type: "Text"
+    description: "默认 ANTHROPIC_AUTH_TOKEN；服务商要求 x-api-key 时改为 ANTHROPIC_API_KEY。"
+    default_value: "ANTHROPIC_AUTH_TOKEN"
+tags: ["claude", "api", "switch", "mac"]
+shells: ["bash", "zsh"]
+source_url: "https://code.claude.com/docs/en/llm-gateway-connect"

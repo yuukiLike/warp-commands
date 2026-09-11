@@ -1,0 +1,15 @@
+---
+name: "ssh ed25519"
+command: "ssh-keygen -t ed25519 -C \"{{email}}\" -f \"{{key_file}}\""
+description: "在 Bash/Zsh 中生成 Ed25519 密钥，公钥文件以 .pub 结尾。覆盖已有密钥前，ssh-keygen 会提示确认。"
+arguments:
+  - name: "email"
+    arg_type: "Text"
+    description: "此密钥的邮箱地址或标识。"
+    default_value: null
+  - name: "key_file"
+    arg_type: "Text"
+    description: "私钥保存路径，支持 $HOME。"
+    default_value: "$HOME/.ssh/id_ed25519"
+tags: ["ssh", "git"]
+shells: ["bash", "zsh"]

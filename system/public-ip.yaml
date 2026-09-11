@@ -1,0 +1,7 @@
+---
+name: "public ip"
+command: "curl https://cip.cc"
+description: "通过 cip.cc 查询当前公网 IP。"
+arguments: []
+tags: ["network", "system"]
+shells: []

@@ -1,0 +1,15 @@
+---
+# start 启动，stop 停止，restart 重启，status 查看状态。
+# npx 明确从 whistle 包调用 w2；无需预先全局安装。
+# 若已通过 npm install -g whistle 安装，也可直接运行 w2 start 等命令。
+name: "whistle"
+command: "npx --package=whistle -- w2 {{action}}"
+description: "启动、停止、重启 Whistle 代理或查看状态。需要 Node.js/npm；npx 在本地无可用包时会提示下载。"
+arguments:
+  - name: "action"
+    arg_type: "Text"
+    description: "start 启动，stop 停止，restart 重启，status 查看状态。"
+    default_value: "start"
+tags: ["whistle", "proxy", "development"]
+shells: []
+source_url: "https://wproxy.org/docs/cli.html"

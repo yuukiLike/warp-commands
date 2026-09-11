@@ -1,0 +1,7 @@
+---
+name: "codex install npm"
+command: "npm install -g @openai/codex"
+description: "通过 npm 全局安装或更新 Codex。排查安装问题时可追加 --verbose。"
+arguments: []
+tags: ["codex", "ai"]
+shells: []

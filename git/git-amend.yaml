@@ -1,0 +1,7 @@
+---
+name: "git amend"
+command: "git commit --amend --no-edit"
+description: "将已暂存的更改合入上一次提交，并保留提交说明。会改写提交 ID，不包含未暂存的更改。"
+arguments: []
+tags: ["git"]
+shells: []

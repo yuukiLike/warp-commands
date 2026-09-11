@@ -1,0 +1,18 @@
+---
+# 官方源：https://registry.npmjs.org/
+# npmmirror：https://registry.npmmirror.com/
+# 查看当前源：npm config get registry
+# 可选 nrm：npm install -g nrm
+# nrm ls 列出源；nrm current 显示当前源。
+# nrm use npm 切回官方源；nrm use taobao 切到 npmmirror。
+name: "npm registry"
+command: 'npm config set registry "{{registry}}"'
+description: "切换 npm 软件源，默认使用 npmmirror；也可填写官方源或其他地址。注释中提供 nrm 的可选用法。"
+arguments:
+  - name: "registry"
+    arg_type: "Text"
+    description: "软件源地址，默认 npmmirror；官方源为 https://registry.npmjs.org/。"
+    default_value: "https://registry.npmmirror.com/"
+tags: ["npm", "registry", "nrm", "development"]
+shells: []
+source_url: "https://github.com/Pana/nrm"

@@ -1,0 +1,11 @@
+---
+name: "chrome claude report"
+command: "open -a \"Google Chrome\" \"{{file}}\""
+description: "在 macOS 上使用 Chrome 打开本地 Claude 用量报告，也可指定其他 HTML 文件。"
+arguments:
+  - name: "file"
+    arg_type: "Text"
+    description: "文件路径，支持空格。"
+    default_value: "$HOME/.claude/usage-data/report.html"
+tags: ["chrome", "browser", "macos"]
+shells: ["bash", "zsh"]

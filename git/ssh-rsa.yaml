@@ -1,0 +1,11 @@
+---
+name: "ssh rsa"
+command: "ssh-keygen -t rsa -b 4096 -C \"{{comment}}\""
+description: "为需要 RSA 的服务生成 4096 位 RSA 密钥，ssh-keygen 会提示选择保存路径。"
+arguments:
+  - name: "comment"
+    arg_type: "Text"
+    description: "此密钥的标识。"
+    default_value: "GitLab"
+tags: ["ssh", "git"]
+shells: []

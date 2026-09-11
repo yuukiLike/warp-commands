@@ -1,0 +1,34 @@
+---
+# pbcopy 将标准输入写入剪贴板；pbpaste 将剪贴板内容输出到终端。
+#
+# 复制文件内容：pbcopy < "file.txt"
+# 复制命令输出：git diff | pbcopy
+# 复制文字：printf '%s' '要复制的文字' | pbcopy
+# 复制当前目录的路径：printf '%s' "$PWD" | pbcopy
+# 查看剪贴板：pbpaste
+# 保存到文件（覆盖）：pbpaste > "clipboard.txt"
+# 保存到文件（追加）：pbpaste >> "clipboard.txt"
+# 清空剪贴板：pbcopy < /dev/null
+#
+# < 从文件读取；| 将左侧命令的标准输出交给右侧命令。
+# > 覆盖目标文件，>> 追加到末尾；printf '%s' 不会额外添加换行。
+# 本地手册：man pbcopy（同时包含 pbpaste 的说明）。
+name: "mac clipboard"
+command: |-
+  case "{{action}}" in
+    copy) pbcopy < "{{file}}" ;;
+    save) pbpaste > "{{file}}" ;;
+    *) printf '%s\n' 'Use copy or save.' >&2; false ;;
+  esac
+description: "复制文件内容到 macOS 剪贴板，或将剪贴板保存到文件。保存会覆盖目标文件；注释包含文字、路径、命令输出等剪贴板用法。"
+arguments:
+  - name: "action"
+    arg_type: "Text"
+    description: "copy 将文件内容复制到剪贴板；save 将剪贴板保存到文件。"
+    default_value: "copy"
+  - name: "file"
+    arg_type: "Text"
+    description: "copy 时为来源文件，save 时为目标文件；支持空格。"
+    default_value: "clipboard.txt"
+tags: ["macos", "clipboard", "system"]
+shells: ["bash", "zsh"]

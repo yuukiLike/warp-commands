@@ -1,0 +1,13 @@
+---
+# 查看当前设置：npm config get progress
+# true 开启进度显示，false 关闭；只影响显示，不改变安装内容。
+name: "npm progress"
+command: "npm config set progress {{enabled}}"
+description: "开启或关闭 npm 安装进度显示，默认关闭。"
+arguments:
+  - name: "enabled"
+    arg_type: "Text"
+    description: "true 开启，false 关闭。"
+    default_value: "false"
+tags: ["npm", "development"]
+shells: []

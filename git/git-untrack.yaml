@@ -1,0 +1,11 @@
+---
+name: "git untrack"
+command: "git rm -r --cached -- \"{{path}}\""
+description: "将文件或目录从 Git 索引中移除，保留磁盘上的文件。可按需将路径加入 .gitignore。"
+arguments:
+  - name: "path"
+    arg_type: "Text"
+    description: "文件或目录路径。"
+    default_value: "node_modules"
+tags: ["git"]
+shells: []

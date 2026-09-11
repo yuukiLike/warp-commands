@@ -1,0 +1,9 @@
+---
+name: "claude install mac"
+command: |-
+  curl -fsSL https://claude.ai/install.sh | bash
+description: "使用官方脚本安装 Claude Code，适用于 macOS Bash/Zsh。"
+arguments: []
+tags: ["claude", "install", "mac"]
+shells: ["bash", "zsh"]
+source_url: "https://code.claude.com/docs/en/setup"

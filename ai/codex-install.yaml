@@ -1,0 +1,7 @@
+---
+name: "codex install"
+command: "curl -fsSL https://chatgpt.com/codex/install.sh | sh"
+description: "在 Bash/Zsh 中下载并运行 Codex 安装脚本。"
+arguments: []
+tags: ["codex", "ai"]
+shells: ["bash", "zsh"]

@@ -1,0 +1,23 @@
+---
+name: "ssh server"
+command: 'ssh -i "{{key_file}}" -p "{{port}}" "{{user}}@{{host}}"'
+description: "使用指定私钥连接 SSH 服务器；填写服务器地址、用户名和私钥路径。"
+arguments:
+  - name: "host"
+    arg_type: "Text"
+    description: "服务器域名或 IP 地址。"
+    default_value: "example.com"
+  - name: "user"
+    arg_type: "Text"
+    description: "服务器登录用户名。"
+    default_value: "user"
+  - name: "key_file"
+    arg_type: "Text"
+    description: "本机私钥的绝对路径。"
+    default_value: "$HOME/.ssh/id_ed25519"
+  - name: "port"
+    arg_type: "Text"
+    description: "SSH 端口，通常为 22。"
+    default_value: "22"
+tags: ["ssh", "git"]
+shells: []

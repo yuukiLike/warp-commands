@@ -1,0 +1,7 @@
+---
+name: "chrome ignore certs mac"
+command: "open -a \"Google Chrome\" --args --ignore-certificate-errors"
+description: "在 macOS 上使用 --ignore-certificate-errors 启动 Chrome，供调试时忽略证书错误。已运行的 Chrome 进程可能沿用原来的启动参数。"
+arguments: []
+tags: ["chrome", "browser", "macos"]
+shells: ["bash", "zsh"]

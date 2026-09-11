@@ -1,0 +1,7 @@
+---
+name: "rust install"
+command: "curl --proto '=https' --tlsv1.2 -sSf https://sh.rustup.rs | sh"
+description: "在 Bash/Zsh 中下载并运行官方 rustup 安装脚本。"
+arguments: []
+tags: ["rust", "development"]
+shells: ["bash", "zsh"]

@@ -1,0 +1,11 @@
+# Local metadata and history
+.DS_Store
+/.local-history/
+
+# Local environment settings
+.env
+.env.*
+!.env.example
+
+# Saved personal credentials
+/git/git-token-remote.yaml

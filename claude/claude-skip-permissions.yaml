@@ -1,0 +1,7 @@
+---
+name: "claude skip permissions"
+command: "claude --dangerously-skip-permissions"
+description: "使用 --dangerously-skip-permissions 启动 Claude Code，在本次会话中跳过工具权限确认。"
+arguments: []
+tags: ["claude", "ai"]
+shells: []

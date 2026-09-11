@@ -1,0 +1,11 @@
+---
+name: "win web check"
+command: "Invoke-WebRequest -Uri \"{{url}}\" -UseBasicParsing -TimeoutSec 15"
+description: "在 PowerShell 中检查指定网址是否可访问，默认 Google，超时为 15 秒，使用当前网络配置。"
+arguments:
+  - name: "url"
+    arg_type: "Text"
+    description: "要检查的完整网址，包含 https:// 或 http://。"
+    default_value: "https://www.google.com"
+tags: ["windows", "system", "powershell"]
+shells: []

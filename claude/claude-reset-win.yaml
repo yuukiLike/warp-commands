@@ -1,0 +1,10 @@
+---
+name: "claude reset win"
+command: |-
+  Remove-Item Env:ANTHROPIC_AUTH_TOKEN, Env:ANTHROPIC_API_KEY, Env:ANTHROPIC_BASE_URL,
+    Env:ANTHROPIC_MODEL, Env:ANTHROPIC_DEFAULT_SONNET_MODEL, Env:ANTHROPIC_DEFAULT_OPUS_MODEL,
+    Env:ANTHROPIC_DEFAULT_HAIKU_MODEL, Env:CLAUDE_API_TOKEN, Env:CLAUDE_API_URL -ErrorAction SilentlyContinue
+description: "清除当前终端中 Claude 的 API 地址、密钥和模型覆盖环境变量，适用于 Windows PowerShell。配置文件中的设置仍会生效。"
+arguments: []
+tags: ["claude", "reset", "windows", "powershell"]
+shells: []

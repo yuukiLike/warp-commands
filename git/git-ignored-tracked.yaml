@@ -1,0 +1,7 @@
+---
+name: "git ignored tracked"
+command: "git ls-files -ci --exclude-standard"
+description: "列出已被 Git 跟踪、同时匹配忽略规则的文件。仅查看，保留用户提供的 git ls-files 命令。"
+arguments: []
+tags: ["git"]
+shells: []

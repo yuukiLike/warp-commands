@@ -1,0 +1,11 @@
+---
+name: "win clipboard save"
+command: "Get-Clipboard -Raw | Set-Content -LiteralPath \"{{file}}\" -Encoding utf8 -NoNewline"
+description: "在 PowerShell 中将剪贴板内容保存为 UTF-8 文本，不追加换行符，会覆盖已有文件。"
+arguments:
+  - name: "file"
+    arg_type: "Text"
+    description: "文件路径，支持空格。"
+    default_value: "clipboard.txt"
+tags: ["windows", "system"]
+shells: []

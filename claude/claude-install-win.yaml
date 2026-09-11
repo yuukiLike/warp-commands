@@ -1,0 +1,9 @@
+---
+name: "claude install win"
+command: |-
+  irm https://claude.ai/install.ps1 | iex
+description: "使用官方脚本安装 Claude Code，适用于 Windows PowerShell。"
+arguments: []
+tags: ["claude", "install", "windows", "powershell"]
+shells: []
+source_url: "https://code.claude.com/docs/en/setup"

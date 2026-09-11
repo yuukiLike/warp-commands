@@ -1,0 +1,11 @@
+---
+name: "git fetch switch"
+command: "git fetch origin \"{{branch}}\" && git switch \"{{branch}}\""
+description: "从 origin 拉取远程更新，成功后切换分支。需要 Bash、Zsh 或 PowerShell 7。"
+arguments:
+  - name: "branch"
+    arg_type: "Text"
+    description: "分支名称。"
+    default_value: "main"
+tags: ["git"]
+shells: []

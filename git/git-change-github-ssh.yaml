@@ -1,0 +1,15 @@
+---
+name: "git change github ssh"
+command: "git remote set-url origin \"git@github.com:{{owner}}/{{repository}}.git\""
+description: "将 origin 设为指定仓库的 GitHub SSH 地址，需要已配置 SSH 密钥。"
+arguments:
+  - name: "owner"
+    arg_type: "Text"
+    description: "GitHub 用户名或组织名。"
+    default_value: "yuukiLike"
+  - name: "repository"
+    arg_type: "Text"
+    description: "仓库名称，不包含 .git 后缀。"
+    default_value: null
+tags: ["git"]
+shells: []

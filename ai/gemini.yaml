@@ -1,0 +1,7 @@
+---
+name: "gemini"
+command: "npx @google/gemini-cli"
+description: "通过 npx 启动 Gemini CLI，需要 Node.js 和 npm。"
+arguments: []
+tags: ["gemini", "ai"]
+shells: []

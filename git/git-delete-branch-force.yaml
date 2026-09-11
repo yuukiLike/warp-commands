@@ -1,0 +1,14 @@
+---
+# -d：只删除已完全合并到上游分支的本地分支；未设置上游时检查 HEAD。
+# -D：跳过合并检查，允许删除含有未合并提交的本地分支。
+# 普通清理可将下方 -D 改为 -d；两者都不会删除远程分支。
+name: "git delete branch force"
+command: "git branch -D -- \"{{branch}}\""
+description: "强制删除本地分支，包括含有未合并提交的分支。远程分支不受影响。"
+arguments:
+  - name: "branch"
+    arg_type: "Text"
+    description: "分支名称。"
+    default_value: null
+tags: ["git"]
+shells: []

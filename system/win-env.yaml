@@ -1,0 +1,11 @@
+---
+name: "win env"
+command: "[Environment]::GetEnvironmentVariables(\"{{scope}}\")"
+description: "在 PowerShell 中查看进程、用户或系统级环境变量，分别对应 Process、User 和 Machine。"
+arguments:
+  - name: "scope"
+    arg_type: "Text"
+    description: "环境变量范围：Process（当前进程）、User（当前用户）或 Machine（系统）。"
+    default_value: "Process"
+tags: ["windows", "system"]
+shells: []

@@ -1,0 +1,11 @@
+---
+name: "vue inspect"
+command: "npx vue-cli-service inspect > \"{{file}}\""
+description: "导出当前 Vue CLI 项目的 webpack 配置，会覆盖目标文件。"
+arguments:
+  - name: "file"
+    arg_type: "Text"
+    description: "文件路径，支持空格。"
+    default_value: "webpack.config.js"
+tags: ["vue", "development"]
+shells: []

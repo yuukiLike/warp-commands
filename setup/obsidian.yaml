@@ -1,0 +1,63 @@
+---
+name: "setup obsidian"
+command: |-
+  # 只需在每台 Mac 的 Warp 中运行一次，之后直接使用 cnotes。
+  # 安装过程放在子 Shell 中，临时变量不会留在日常终端里。
+  (
+    command_file="$HOME/.config/warp-commands/obsidian.zsh"
+    zsh_config_directory="${ZDOTDIR:-$HOME}"
+    zsh_config="$zsh_config_directory/.zshrc"
+
+    # 1. 确认能追加 Zsh 配置；保留用户已有的设置。
+    if [ ! -d "$zsh_config_directory" ] || [ ! -w "$zsh_config_directory" ]; then
+      printf 'Zsh 配置目录不存在或不可写：%s\n' "$zsh_config_directory" >&2
+      exit 1
+    fi
+    if [ -e "$zsh_config" ] && [ ! -f "$zsh_config" ]; then
+      printf 'Zsh 配置不是普通文件：%s\n' "$zsh_config" >&2
+      exit 1
+    fi
+    if [ -f "$zsh_config" ] && { [ ! -r "$zsh_config" ] || [ ! -w "$zsh_config" ]; }; then
+      printf '无法读写 Zsh 配置：%s\n' "$zsh_config" >&2
+      exit 1
+    fi
+
+    # 2. 保存 cnotes 的定义。先写临时文件，完成后再替换旧版本。
+    mkdir -p "$HOME/.config/warp-commands" || exit
+    temporary_file=$(mktemp "$command_file.XXXXXX") || exit
+    trap 'rm -f -- "$temporary_file"' EXIT
+
+    # 引号中的 ZSH 表示：保留下面的变量，等用户运行 cnotes 时再展开。
+    cat > "$temporary_file" <<'ZSH' || exit
+  # 进入当前 Mac 的 iCloud Obsidian 笔记库，默认使用 notes。
+  cnotes() {
+    if [ "$#" -gt 1 ]; then
+      printf '%s\n' '用法：cnotes [笔记库名称]' >&2
+      return 2
+    fi
+
+    local vault_name="${1:-notes}"
+    local vault_directory="$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/$vault_name"
+
+    # cd 在当前 Shell 中执行；目录不存在时返回错误，保持原来的位置。
+    builtin cd -- "$vault_directory"
+  }
+  ZSH
+
+    zsh -n "$temporary_file" || exit
+    mv -f -- "$temporary_file" "$command_file" || exit
+
+    # 3. 注册自动加载。再次安装会更新命令，但不会重复添加这一行。
+    source_line='source "$HOME/.config/warp-commands/obsidian.zsh"'
+    if [ ! -f "$zsh_config" ] || ! grep -Fqx -- "$source_line" "$zsh_config"; then
+      printf '\n# Warp Commands: cnotes\n%s\n' "$source_line" >> "$zsh_config" || exit
+    fi
+  ) && {
+    # 4. 立即加载到当前 Warp 终端，安装完成后就能使用。
+    source "$HOME/.config/warp-commands/obsidian.zsh" &&
+      printf '%s\n' '已安装 cnotes。输入 cnotes 进入 notes，或输入 cnotes "笔记库名称"。'
+  }
+description: "在当前 Mac 安装 Obsidian 短命令 cnotes：保存命令定义，向 .zshrc 添加加载行，并立即生效。重复执行可更新命令；不需要填写仓库路径。"
+arguments: []
+tags: ["setup", "install", "obsidian", "icloud", "zsh", "macos"]
+shells: ["zsh"]

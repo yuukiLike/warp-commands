@@ -1,0 +1,134 @@
+---
+name: "setup projects"
+command: |-
+  # 只需在每台 Mac 的 Warp 中运行一次，之后直接使用 projects。
+  # 安装过程放在子 Shell 中，临时变量不会留在日常终端里。
+  (
+    command_file="$HOME/.config/warp-commands/projects.zsh"
+    zsh_config_directory="${ZDOTDIR:-$HOME}"
+    zsh_config="$zsh_config_directory/.zshrc"
+
+    # 1. 确认能追加 Zsh 配置；保留用户已有的设置。
+    if [ ! -d "$zsh_config_directory" ] || [ ! -w "$zsh_config_directory" ]; then
+      printf 'Zsh 配置目录不存在或不可写：%s\n' "$zsh_config_directory" >&2
+      exit 1
+    fi
+    if [ -e "$zsh_config" ] && [ ! -f "$zsh_config" ]; then
+      printf 'Zsh 配置不是普通文件：%s\n' "$zsh_config" >&2
+      exit 1
+    fi
+    if [ -f "$zsh_config" ] && { [ ! -r "$zsh_config" ] || [ ! -w "$zsh_config" ]; }; then
+      printf '无法读写 Zsh 配置：%s\n' "$zsh_config" >&2
+      exit 1
+    fi
+
+    # 2. 先检测 eza，缺少时明确提示将使用的 brew 命令。
+    if command -v eza >/dev/null 2>&1; then
+      printf '%s\n' '已检测到 eza，跳过软件安装。'
+    else
+      printf '%s\n' '未检测到 eza，需要先安装依赖。'
+      if ! command -v brew >/dev/null 2>&1; then
+        printf '%s\n' '未找到 Homebrew（brew）。请先安装 Homebrew，再运行 setup projects。' \
+          '安装 eza 使用的命令：brew install eza' >&2
+        exit 127
+      fi
+      printf '%s\n' '将通过 Homebrew 执行：brew install eza'
+      brew install eza || exit
+      if ! command -v eza >/dev/null 2>&1; then
+        printf '%s\n' '安装后仍找不到 eza。请检查 PATH，再运行 setup projects。' >&2
+        exit 127
+      fi
+    fi
+
+    # 3. 保存 projects 的定义。先写临时文件，完成后再替换旧版本。
+    mkdir -p "$HOME/.config/warp-commands" || exit
+    temporary_file=$(mktemp "$command_file.XXXXXX") || exit
+    trap 'rm -f -- "$temporary_file"' EXIT
+
+    # 引号中的 ZSH 表示：保留下面的变量，等用户运行 projects 时再展开。
+    cat > "$temporary_file" <<'ZSH' || exit
+  # 查看一个父目录下的项目，默认使用当前用户的 ~/codex。
+  projects() {
+    if [ "$#" -gt 1 ]; then
+      printf '%s\n' '用法：projects [项目父目录]' >&2
+      return 2
+    fi
+
+    local directory="${1:-$HOME/codex}"
+    if ! command -v eza >/dev/null 2>&1; then
+      printf '%s\n' '未找到 eza。请在 Warp 中运行 setup projects，按提示通过 brew install eza 安装。' >&2
+      return 127
+    fi
+    if [ ! -d "$directory" ]; then
+      printf '项目目录不存在：%s\n' "$directory" >&2
+      return 1
+    fi
+
+    # 仅在子 Shell 中开启 pipefail：eza 失败时，整个命令也返回失败。
+    (
+      set -o pipefail
+
+      # eza 提供 Git 状态、分支和目录名；awk 将它们整理成三列表格。
+      # 关闭 eza 的装饰输出，避免颜色和图标混入待解析的字段。
+      eza -lD --git-repos --no-permissions --no-filesize --no-user --no-time \
+        --color=never --icons=never --hyperlink=never --no-quotes \
+        -I node_modules -- "$directory" | awk '
+        BEGIN {
+          use_color = !("NO_COLOR" in ENVIRON) && system("test -t 1") == 0
+
+          status_text["|"] = "clean"
+          status_text["+"] = "local changes"
+          status_text["-"] = "not a Git repo"
+
+          status_color["|"] = "30;106"
+          status_color["+"] = "1;97;41"
+          status_color["-"] = "1;30;103"
+
+          printf "%-16s %-24s %s\n", "PROJECT", "BRANCH", "STATUS"
+        }
+        {
+          # 前两个字段是状态与分支；剩余内容全部保留为项目名，包含空格。
+          git_status = $1
+          branch = $2
+          project_name = $0
+          sub(/^[^[:space:]]+[[:space:]]+[^[:space:]]+[[:space:]]+/, "", project_name)
+
+          description = "status unknown"
+          style = "1;97;41"
+          if (git_status in status_text) {
+            description = status_text[git_status]
+            style = status_color[git_status]
+          }
+
+          # 输出到文件、管道，或设置了 NO_COLOR 时，保留纯文本。
+          color_start = ""
+          color_end = ""
+          if (use_color) {
+            color_start = sprintf("\033[%sm", style)
+            color_end = "\033[0m"
+          }
+
+          printf "%-16s %-24s %s%s%s\n", project_name, branch, color_start, description, color_end
+        }'
+    )
+  }
+  ZSH
+
+    zsh -n "$temporary_file" || exit
+    mv -f -- "$temporary_file" "$command_file" || exit
+
+    # 4. 注册自动加载。再次安装会更新命令，但不会重复添加这一行。
+    source_line='source "$HOME/.config/warp-commands/projects.zsh"'
+    if [ ! -f "$zsh_config" ] || ! grep -Fqx -- "$source_line" "$zsh_config"; then
+      printf '\n# Warp Commands: projects\n%s\n' "$source_line" >> "$zsh_config" || exit
+    fi
+  ) && {
+    # 5. 立即加载到当前 Warp 终端，安装完成后就能使用。
+    source "$HOME/.config/warp-commands/projects.zsh" &&
+      printf '%s\n' '已安装 projects。输入 projects 查看 ~/codex，或输入 projects "$HOME/explore"。'
+  }
+description: "在当前 Mac 安装 eza 项目概览命令 projects：先检测 eza，缺少时提示 brew install eza 后通过 Homebrew 安装，再保存命令并注册 .zshrc 加载。立即生效，重复执行可更新。"
+arguments: []
+tags: ["setup", "install", "projects", "eza", "git", "zsh", "macos"]
+shells: ["zsh"]
+source_url: "https://eza.rocks/#installation"

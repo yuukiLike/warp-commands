@@ -1,0 +1,11 @@
+---
+name: "obsidian"
+command: 'cd "$HOME/Library/Mobile Documents/iCloud~md~obsidian/Documents/{{vault}}"'
+description: "直接进入 iCloud Obsidian 笔记库，默认 notes。支持空格，适用于多台 Mac。请先开启 iCloud Drive 并同步好该笔记库；若想用 cnotes 短命令，先在 Warp 中运行 setup obsidian。"
+arguments:
+  - name: "vault"
+    arg_type: "Text"
+    description: "iCloud 云盘 → Obsidian 下的笔记库名称。"
+    default_value: "notes"
+tags: ["obsidian", "icloud", "notes", "macos"]
+shells: ["bash", "zsh"]

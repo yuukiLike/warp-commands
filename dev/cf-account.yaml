@@ -1,0 +1,12 @@
+---
+# 查看当前 wrangler 登录账户。Account ID 也可在 Workers & Pages 右侧 Account Details，
+# 或地址栏 https://dash.cloudflare.com/<account>/... 复制。
+# https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/
+# 下一步：cf worker tag
+name: "cf account"
+command: "wrangler whoami"
+description: "查看当前 wrangler 登录的 Cloudflare 账户和 Account ID。也可在 Workers & Pages 右侧或地址栏复制。"
+arguments: []
+tags: ["cloudflare", "workers", "wrangler"]
+shells: []
+source_url: "https://developers.cloudflare.com/fundamentals/account/find-account-and-zone-ids/"

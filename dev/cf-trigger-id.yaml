@@ -1,0 +1,26 @@
+---
+# 列出某个 Worker 的 Builds trigger。控制台没有 trigger UUID。
+# 返回两条：branch_includes 含 main 的是 production；另一条是 preview。
+# 下一步：cf builds trigger
+# https://developers.cloudflare.com/workers/ci-cd/builds/api-reference/
+name: "cf trigger id"
+command: |-
+  curl -sS -H "Authorization: Bearer {{apiToken}}" \
+    "https://api.cloudflare.com/client/v4/accounts/{{account}}/builds/workers/{{tag}}/triggers"
+description: "列出 Worker 的 Builds trigger UUID。tag 来自 cf worker tag。含 main 的是 production，另一条是 preview。apiToken 填入后会出现在执行的命令中。"
+arguments:
+  - name: "apiToken"
+    arg_type: "Text"
+    description: "用户级 API Token，需要 Workers Builds Configuration Read 或 Edit。"
+    default_value: null
+  - name: "account"
+    arg_type: "Text"
+    description: "账户 ID。先运行 cf account，或从 Workers & Pages / 地址栏复制。"
+    default_value: null
+  - name: "tag"
+    arg_type: "Text"
+    description: "Worker tag，不是名字。先运行 cf worker tag，在结果里找 id 对应的 tag。"
+    default_value: null
+tags: ["cloudflare", "workers", "builds"]
+shells: []
+source_url: "https://developers.cloudflare.com/api/resources/workers_builds/subresources/triggers/methods/list/"

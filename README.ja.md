@@ -41,7 +41,7 @@
 | [claude](claude/) | Claude Code のインストール、API 切り替え、環境のリセット |
 | [ai](ai/) | Codex と Gemini |
 | [browser](browser/) | Chrome キャッシュ、証明書のデバッグ、Puppeteer |
-| [dev](dev/) | npm、Whistle、Rust、Vue |
+| [dev](dev/) | npm、Whistle、Rust、Vue、Cloudflare Builds |
 | [system](system/) | グローバル IP と Windows ユーティリティ |
 | [notes](notes/) | Git、SSH、シェルの参考ノート |
 

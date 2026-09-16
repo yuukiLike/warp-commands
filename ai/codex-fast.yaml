@@ -6,6 +6,6 @@ arguments:
   - name: "model"
     arg_type: "Text"
     description: "当前账号可用的模型 ID。"
-    default_value: "gpt-5.3-codex-spark"
+    default_value: "gpt-5.5"
 tags: ["codex", "ai"]
 shells: []

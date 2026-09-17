@@ -39,7 +39,7 @@
 | [setup](setup/) | 在 Warp 中安装一次：由 `.zshrc` 加载的 `cnotes` 和 eza 项目概览 `projects` |
 | [git](git/) | Git 操作、忽略规则、SSH |
 | [claude](claude/) | Claude Code 安装、API 切换、环境重置 |
-| [ai](ai/) | Codex 与 Gemini |
+| [ai](ai/) | Codex、Gemini 与 DeepSeek 驱动的 Claude Code |
 | [browser](browser/) | Chrome 缓存、证书调试、Puppeteer |
 | [dev](dev/) | npm、Whistle、Rust、Vue、Cloudflare Builds |
 | [system](system/) | 公网 IP 与 Windows 实用工具 |

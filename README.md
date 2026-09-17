@@ -39,7 +39,7 @@ Warp Drive imports a synced copy. Keep the repository YAML as your source. [Impo
 | [setup](setup/) | Run once in Warp: install `cnotes` and eza-based `projects`, loaded by `.zshrc` |
 | [git](git/) | Git operations, ignore rules, SSH |
 | [claude](claude/) | Claude Code installation, API switching, environment reset |
-| [ai](ai/) | Codex and Gemini |
+| [ai](ai/) | Codex, Gemini, and DeepSeek-backed Claude Code |
 | [browser](browser/) | Chrome cache, certificate debugging, Puppeteer |
 | [dev](dev/) | npm, Whistle, Rust, Vue, Cloudflare Builds |
 | [system](system/) | Public IP and Windows utilities |

@@ -1,0 +1,33 @@
+---
+name: ds-claude
+command: |-
+  # 启动 Claude Code + DeepSeek，不改变外面的终端环境
+  claude-deepseek() (
+    set +x
+
+    # 只在本次启动中清理可能冲突的认证与云后端选择
+    unset ANTHROPIC_API_KEY CLAUDE_CODE_OAUTH_TOKEN ANTHROPIC_CUSTOM_HEADERS
+    unset CLAUDE_CODE_USE_BEDROCK CLAUDE_CODE_USE_VERTEX \
+          CLAUDE_CODE_USE_FOUNDRY CLAUDE_CODE_USE_ANTHROPIC_AWS
+
+    # DeepSeek 使用独立用户配置，避免与日常 Claude 混用
+    export CLAUDE_CONFIG_DIR="$HOME/.claude-ds"
+
+    export ANTHROPIC_BASE_URL="https://api.deepseek.com/anthropic"
+    export ANTHROPIC_AUTH_TOKEN="${DEEPSEEK_API_KEY:?请先设置 DEEPSEEK_API_KEY}"
+    export ANTHROPIC_MODEL="deepseek-flash[1m]"
+    export ANTHROPIC_DEFAULT_OPUS_MODEL="deepseek-v4-pro[1m]"
+    export ANTHROPIC_DEFAULT_SONNET_MODEL="deepseek-flash[1m]"
+    export ANTHROPIC_DEFAULT_HAIKU_MODEL="deepseek-flash"
+    export CLAUDE_CODE_SUBAGENT_MODEL="deepseek-flash"
+    export CLAUDE_CODE_EFFORT_LEVEL="max"
+    export CLAUDE_CODE_AUTO_COMPACT_WINDOW="786432"
+
+    command claude "$@"
+  )
+  claude-deepseek "$@"
+description: "通过 DeepSeek 的 Anthropic 兼容接口启动 Claude Code，使用独立配置目录，不影响日常 Claude 环境。需先设置 DEEPSEEK_API_KEY。"
+arguments: []
+tags: ["claude", "deepseek", "ai"]
+source_url: "https://api-docs.deepseek.com/quick_start/agent_integrations/claude_code"
+shells: ["bash", "zsh"]

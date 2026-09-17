@@ -1,0 +1,28 @@
+# gh repo rename 重命名 GitHub 仓库，并处理本地 origin 的同步。
+#
+# 关键区别：是否带 -R/--repo，决定了 gh 会不会顺带更新本地 remote。
+# 口诀：「原地改 → 全包；指定改 → 只管远端」。
+#   -R 的 R 可联想为 Remote only：指定了远程仓库，就不碰本地 origin。
+#
+# 不带 -R（在仓库目录内）：
+#   gh 把它当作「当前仓库」改名，并顺手把本地 origin URL 一并改好，
+#   避免改完后 git push/fetch 断掉。
+#
+# 带 -R OWNER/REPO（或远程任意仓库）：
+#   纯操作远端，不假设你有对应本地仓库，因此不会改任何本地 remote。
+#
+# 改名后 GitHub 会保留旧 URL 重定向，旧链接不失效；但本地 git remote -v
+# 若仍是旧地址，建议手动同步一次，避免旧别名将来失效：
+#   git remote set-url origin git@github.com:OWNER/NEW-NAME.git
+# 转移仓库所有权（换 owner）需走 github.com 网页的 transfer 流程。
+# 参考：https://cli.github.com/manual/gh_repo_rename
+name: "gh repo rename"
+command: "gh repo rename {{new_name}}"
+description: "重命名 GitHub 仓库。在仓库目录内运行会自动同步本地 origin；需要只改远端、不碰本地 remote 时，改用 gh repo rename -R OWNER/REPO 新名。"
+arguments:
+  - name: "new_name"
+    arg_type: "Text"
+    description: "新仓库名，不含 OWNER/ 前缀。"
+    default_value: null
+tags: ["git", "github"]
+shells: []

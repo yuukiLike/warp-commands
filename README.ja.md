@@ -39,7 +39,7 @@
 | [setup](setup/) | Warp で一度インストールし、`.zshrc` から読み込む `cnotes` と eza ベースの `projects` |
 | [git](git/) | Git 操作、除外ルール、SSH |
 | [claude](claude/) | Claude Code のインストール、API 切り替え、環境のリセット |
-| [ai](ai/) | Codex、Gemini、DeepSeek 経由の Claude Code |
+| [ai](ai/) | Codex、Gemini、DeepSeek 経由の Claude Code・Codex |
 | [browser](browser/) | Chrome キャッシュ、証明書のデバッグ、Puppeteer |
 | [dev](dev/) | npm、Whistle、Rust、Vue、Cloudflare Builds |
 | [system](system/) | グローバル IP と Windows ユーティリティ |

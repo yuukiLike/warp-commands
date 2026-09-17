@@ -1,0 +1,17 @@
+---
+name: ds-codex
+command: |-
+  if [ ! -r "$HOME/.codex-ds/config.toml" ] ||
+     [ ! -r "$HOME/.codex-ds/models.json" ]; then
+    printf '%s\n' '请先运行 setup ds-codex 安装配置' >&2
+    false
+  else
+    CODEX_HOME="$HOME/.codex-ds" \
+    DEEPSEEK_API_KEY="${DEEPSEEK_API_KEY:?请先在 ~/.zshrc 设置 DEEPSEEK_API_KEY}" \
+    command codex
+  fi
+description: "用 ~/.codex-ds 的固定配置启动 DeepSeek 版 Codex，不影响日常 Codex。需先运行 setup ds-codex，并在 ~/.zshrc 设置 DEEPSEEK_API_KEY。"
+arguments: []
+tags: ["codex", "deepseek", "ai"]
+source_url: "https://api-docs.deepseek.com/quick_start/agent_integrations/codex"
+shells: ["bash", "zsh"]

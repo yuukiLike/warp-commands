@@ -1,5 +1,5 @@
 ---
-name: "setup ds-codex"
+name: "setup ds-openai"
 command: |-
   # 只需运行一次：把 DeepSeek 版 Codex 的固定配置写入 ~/.codex-ds，之后用 ds-codex 启动。
   # 配置内容随工作流一起分发，不需要仓库路径，也不联网下载。

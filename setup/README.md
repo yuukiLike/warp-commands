@@ -4,14 +4,16 @@
 
 ## 从 Warp 安装
 
-1. 在 Warp Drive → 个人空间 **+ → Import** 中，选择本目录的 `obsidian.yaml` 和 `projects.yaml`。`README.md` 是说明文档，不需要导入。
+1. 在 Warp Drive → 个人空间 **+ → Import** 中，选择本目录的 `install-obsidian.yaml` 和 `install-projects.yaml`。`README.md` 是说明文档，不需要导入。
 2. 在 Warp 的工作流搜索中搜索下面的安装名称，选择并执行。
 3. 看到安装成功提示后，当前终端立即可用，新开的终端也会自动加载。
 
+文件名以 `install-` 开头：Warp 搜索按命中位置排序，越靠前排名越高。这样输入 `obsidian`、`projects` 时，命令文件（如 `mac/obsidian.yaml`）排在安装文件之前，两者不会互相抢位；想找安装文件时搜索 `install` 或 `setup`。
+
 | 在 Warp 中搜索 | 安装内容 | 安装后使用 |
 | --- | --- | --- |
-| [`setup obsidian`](obsidian.yaml) | Obsidian 笔记库入口 | `cnotes` |
-| [`setup projects`](projects.yaml) | eza 与项目概览命令 | `projects` |
+| [`setup obsidian`](install-obsidian.yaml) | Obsidian 笔记库入口 | `cnotes` |
+| [`setup projects`](install-projects.yaml) | eza 与项目概览命令 | `projects` |
 
 两个工作流可以独立安装，不需要填写仓库路径或切换到源码目录。`setup projects` 先检测 `eza`：已有时提示跳过；缺少时先显示将执行 `brew install eza`，再通过 Homebrew 安装。如果 `brew` 也没有，会提示先安装 Homebrew 并停止。依赖安装方式参考 [eza 官方说明](https://eza.rocks/#installation)。
 
@@ -40,7 +42,7 @@
 
 ## 两种 Obsidian 入口
 
-- **安装后用短命令**：在 Warp 中运行 [`setup obsidian`](obsidian.yaml)，之后输入 `cnotes`。命令定义由 `.zshrc` 加载。
+- **安装后用短命令**：在 Warp 中运行 [`setup obsidian`](install-obsidian.yaml)，之后输入 `cnotes`。命令定义由 `.zshrc` 加载。
 - **直接运行命令**：导入 [obsidian 工作流](../mac/obsidian.yaml)。YAML 中直接保存 `cd` 命令，填写笔记库名称即可运行，也可以复制其中的命令到终端。
 
 ## 多台 Mac 与更新

@@ -41,7 +41,7 @@
 | [claude](claude/) | Claude Code 安装、API 切换、环境重置 |
 | [ai](ai/) | Codex、Gemini 与 DeepSeek 驱动的 Claude Code、Codex |
 | [browser](browser/) | Chrome 缓存、证书调试、Puppeteer |
-| [dev](dev/) | npm、Whistle、Rust、Vue、Cloudflare Builds |
+| [dev](dev/) | npm、Whistle、Rust、Vue |
 | [system](system/) | 公网 IP 与 Windows 实用工具 |
 | [notes](notes/) | Git、SSH 与 Shell 参考笔记 |
 

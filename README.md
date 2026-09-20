@@ -41,7 +41,7 @@ Warp Drive imports a synced copy. Keep the repository YAML as your source. [Impo
 | [claude](claude/) | Claude Code installation, API switching, environment reset |
 | [ai](ai/) | Codex, Gemini, and DeepSeek-backed Claude Code and Codex |
 | [browser](browser/) | Chrome cache, certificate debugging, Puppeteer |
-| [dev](dev/) | npm, Whistle, Rust, Vue, Cloudflare Builds |
+| [dev](dev/) | npm, Whistle, Rust, Vue |
 | [system](system/) | Public IP and Windows utilities |
 | [notes](notes/) | Git, SSH, and shell references |
 

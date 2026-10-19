@@ -1,0 +1,8 @@
+---
+name: "wsl update"
+command: "wsl.exe --update --web-download"
+description: "【Windows PowerShell】从 GitHub 下载并更新 WSL 组件，适用于 Microsoft Store 下载不顺的情况。等待成功并按提示重启；Ubuntu 软件包更新使用 wsl apt upgrade。"
+arguments: []
+tags: ["wsl", "windows", "powershell", "update"]
+shells: []
+source_url: "https://learn.microsoft.com/en-us/windows/wsl/basic-commands"

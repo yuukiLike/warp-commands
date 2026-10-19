@@ -1,0 +1,13 @@
+---
+name: "wsl projects"
+command: |-
+  if [ -n "${WSL_DISTRO_NAME:-}" ]; then
+    mkdir -p -- "$HOME/code" && cd -- "$HOME/code" && pwd
+  else
+    printf '%s\n' '请先进入 WSL 的 Ubuntu 终端，再运行这个工作流。'
+  fi
+description: "【WSL Ubuntu · Bash/Zsh】创建并进入当前 Linux 用户的 ~/code 项目目录。使用当前 Shell 的 cd，运行后会留在该目录。发行版迁到 D 盘后，此路径仍然可用。"
+arguments: []
+tags: ["wsl", "ubuntu", "linux", "projects"]
+shells: ["bash", "zsh"]
+source_url: "https://learn.microsoft.com/en-us/windows/wsl/filesystems"

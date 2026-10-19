@@ -1,0 +1,27 @@
+---
+# Read the package name as data: Warp template arguments are plain text
+# substitutions and do not automatically escape shell metacharacters.
+name: "wsl apt install"
+command: |-
+  (
+    if [ -z "${WSL_DISTRO_NAME:-}" ] || ! command -v apt >/dev/null 2>&1; then
+      printf '%s\n' '请在 WSL 的 Ubuntu/Debian 终端中运行。'
+      exit 1
+    fi
+
+    printf '%s' '输入一个 APT 软件包名（例如 git、curl、unzip）：'
+    IFS= read -r wsl_package || exit 1
+    case "$wsl_package" in
+      ''|-*|*-|*[!a-z0-9+.:-]*)
+        printf '%s\n' '请只输入一个软件包名，不要输入空格、引号、路径或命令；包名不能以 - 结尾。'
+        exit 1
+        ;;
+    esac
+
+    sudo apt update && sudo apt install -- "$wsl_package"
+  )
+description: "【WSL Ubuntu · Bash/Zsh】运行后输入一个 APT 软件包名，先更新软件索引，再安装该软件到 Ubuntu。保留 APT 的安装确认；不会安装 Windows 版软件。"
+arguments: []
+tags: ["wsl", "ubuntu", "linux", "apt", "install"]
+shells: ["bash", "zsh"]
+source_url: "https://documentation.ubuntu.com/server/how-to/software/package-management/"

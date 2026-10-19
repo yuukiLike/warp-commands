@@ -1,0 +1,13 @@
+---
+name: "wsl explorer"
+command: |-
+  if [ -n "${WSL_DISTRO_NAME:-}" ] && command -v explorer.exe >/dev/null 2>&1; then
+    explorer.exe .
+  else
+    printf '%s\n' '请在 WSL 终端中运行，并确认当前能调用 Windows 的 explorer.exe。'
+  fi
+description: "【WSL Ubuntu · Bash/Zsh】在 Windows 资源管理器中打开 Ubuntu 的当前目录。依赖 WSL 的 Windows 程序互操作功能。"
+arguments: []
+tags: ["wsl", "ubuntu", "linux", "windows", "explorer"]
+shells: ["bash", "zsh"]
+source_url: "https://learn.microsoft.com/en-us/windows/wsl/filesystems"

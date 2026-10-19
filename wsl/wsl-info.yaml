@@ -1,0 +1,11 @@
+---
+name: "wsl info"
+command: |-
+  wsl.exe --version
+  wsl.exe --list --verbose
+  wsl.exe --status
+description: "【Windows PowerShell】只读查看 WSL 组件版本、已安装发行版的名称/运行状态/WSL 1 或 2，以及默认配置。Ubuntu 自身的版本另用 cat /etc/os-release 查看。"
+arguments: []
+tags: ["wsl", "windows", "powershell", "version", "status"]
+shells: []
+source_url: "https://learn.microsoft.com/en-us/windows/wsl/basic-commands"

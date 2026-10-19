@@ -13,6 +13,7 @@
 - **macOS の Caps Lock 遅延** — [mac caps delay](mac/mac-caps-delay.yaml)：私の Mac では、この `hidutil` コマンドで解消できました。
 - **iCloud の Obsidian 保管庫を開く** — [obsidian](mac/obsidian.yaml)：`cd` コマンドを直接実行できます。各 Mac に [`cnotes` をインストール](setup/)すると、短いコマンドでも移動できます。
 - **eza でプロジェクトを一覧表示** — [projects](mac/projects.yaml)：[一度インストール](setup/)すれば、`projects` でプロジェクト名、Git ブランチ、状態をまとめて確認できます。既定の `~/codex` の代わりに、自分のディレクトリも指定できます。
+- **Windows で WSL を使う** — [wsl](wsl/)：Ubuntu の起動、バージョンと保存先の確認、フォルダ表示、Ubuntu パッケージの管理。[WSL ガイド（中国語）](notes/wsl-guide.md)で実行するシェルと D ドライブへの移動手順を確認できます。
 
 ## 使ってみる
 
@@ -36,6 +37,7 @@
 | フォルダ | 内容 |
 | --- | --- |
 | [mac](mac/) | クリップボード、DNS、Caps Lock、Zsh 設定、Obsidian、プロジェクト一覧 |
+| [wsl](wsl/) | Windows PowerShell の管理コマンドと Ubuntu Bash/Zsh ワークフロー；[ガイド（中国語）](notes/wsl-guide.md) |
 | [setup](setup/) | Warp で一度インストールし、`.zshrc` から読み込む `cnotes` と eza ベースの `projects` |
 | [git](git/) | Git 操作、除外ルール、SSH |
 | [claude](claude/) | Claude Code のインストール、API 切り替え、環境のリセット |
@@ -43,9 +45,11 @@
 | [browser](browser/) | Chrome キャッシュ、証明書のデバッグ、Puppeteer |
 | [dev](dev/) | npm、Whistle、Rust、Vue |
 | [system](system/) | グローバル IP と Windows ユーティリティ |
-| [notes](notes/) | Git、SSH、シェルの参考ノート |
+| [notes](notes/) | Git、SSH、シェル、WSL の参考ノート |
 
 Windows のワークフローは PowerShell または Git Bash を使います。各ワークフローの説明を確認してください。
+
+WSL を使う場合は `wsl/` 内の YAML をインポートし、`wsl` を検索してください。各説明の先頭に実行環境を記載しています。`wsl apt install` は起動後にパッケージ名を一つ入力します。ディストリビューションを移動する前に、[D ドライブへの移動手順](notes/wsl-guide.md#迁移-ubuntu-到-d-盘)を確認してください。
 
 ## 一度インストールして使う
 

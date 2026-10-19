@@ -1,0 +1,11 @@
+---
+# Stops all WSL distributions and their background processes.
+# Save work and finish Codex / development-server tasks before running.
+# Moving a distribution is a separate operation: see notes/wsl-guide.md.
+name: "wsl shutdown"
+command: "wsl.exe --shutdown"
+description: "【Windows PowerShell】关闭所有正在运行的 WSL 发行版和虚拟机，会结束其中的 Codex、开发服务器等后台任务。先保存工作；若只是离开当前 Ubuntu 终端，在 Ubuntu 输入 exit 即可。"
+arguments: []
+tags: ["wsl", "windows", "powershell", "shutdown"]
+shells: []
+source_url: "https://learn.microsoft.com/en-us/windows/wsl/basic-commands"

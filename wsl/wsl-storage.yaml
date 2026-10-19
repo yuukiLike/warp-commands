@@ -1,0 +1,11 @@
+---
+name: "wsl storage"
+command: |-
+  Get-ChildItem 'HKCU:\Software\Microsoft\Windows\CurrentVersion\Lxss' |
+      Get-ItemProperty |
+      Format-List DistributionName, BasePath
+description: "【Windows PowerShell】只读查询当前 Windows 账户的 WSL 发行版存放目录。看 BasePath 中的 C: 或 D: 判断占用哪个盘；若有 \\\\?\\ 前缀，看后面的盘符。Ubuntu 的 pwd 只显示 Linux 内部路径。"
+arguments: []
+tags: ["wsl", "windows", "powershell", "disk", "storage"]
+shells: []
+source_url: "https://learn.microsoft.com/en-us/windows/wsl/disk-space"

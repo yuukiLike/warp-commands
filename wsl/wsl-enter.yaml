@@ -1,0 +1,8 @@
+---
+name: "wsl enter"
+command: "wsl.exe --cd '~'"
+description: "【Windows PowerShell】进入默认 WSL 发行版的用户主目录。用 wsl info 查看带 * 的默认发行版；指定其他发行版的方法见 notes/wsl-guide.md。"
+arguments: []
+tags: ["wsl", "windows", "powershell", "ubuntu"]
+shells: []
+source_url: "https://learn.microsoft.com/en-us/windows/wsl/basic-commands"

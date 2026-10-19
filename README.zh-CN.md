@@ -13,6 +13,7 @@
 - **macOS Caps Lock 延迟** — [mac caps delay](mac/mac-caps-delay.yaml)：在我的 Mac 上，一条 `hidutil` 命令就解决了这个问题。
 - **进入 iCloud Obsidian 笔记库** — [obsidian](mac/obsidian.yaml)：直接运行 `cd` 命令，也可以在每台 Mac [安装 `cnotes`](setup/)，之后用短命令进入。
 - **用 eza 查看项目概览** — [projects](mac/projects.yaml)：[安装一次](setup/)，之后用 `projects` 一起查看项目名称、Git 分支和状态。默认 `~/codex`，也可以指定自己的项目目录。
+- **在 Windows 中使用 WSL** — [wsl](wsl/)：进入 Ubuntu、查看版本和存储位置、打开项目目录、管理 Ubuntu 软件。[WSL 指南](notes/wsl-guide.md)说明命令在哪个终端执行，以及怎样把发行版迁到 D 盘。
 
 ## 怎么用
 
@@ -36,6 +37,7 @@
 | 文件夹 | 内容 |
 | --- | --- |
 | [mac](mac/) | 剪贴板、DNS、Caps Lock、Zsh 配置、Obsidian、项目概览 |
+| [wsl](wsl/) | Windows PowerShell 管理命令与 Ubuntu Bash/Zsh 工作流；[使用指南](notes/wsl-guide.md) |
 | [setup](setup/) | 在 Warp 中安装一次：由 `.zshrc` 加载的 `cnotes` 和 eza 项目概览 `projects` |
 | [git](git/) | Git 操作、忽略规则、SSH |
 | [claude](claude/) | Claude Code 安装、API 切换、环境重置 |
@@ -43,9 +45,11 @@
 | [browser](browser/) | Chrome 缓存、证书调试、Puppeteer |
 | [dev](dev/) | npm、Whistle、Rust、Vue |
 | [system](system/) | 公网 IP 与 Windows 实用工具 |
-| [notes](notes/) | Git、SSH 与 Shell 参考笔记 |
+| [notes](notes/) | Git、SSH、Shell 与 WSL 参考笔记 |
 
 Windows 工作流使用 PowerShell 或 Git Bash，请以各工作流的说明为准。
+
+使用 WSL 时，导入 `wsl/` 中的 YAML，然后搜索 `wsl`。每条描述开头都标明执行环境。`wsl apt install` 会在运行后询问一个软件包名。迁移发行版前，先按 [D 盘迁移步骤](notes/wsl-guide.md#迁移-ubuntu-到-d-盘)操作。
 
 ## 安装一次，后续直接使用
 

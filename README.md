@@ -13,6 +13,7 @@ English · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 - **macOS Caps Lock delay** — [mac caps delay](mac/mac-caps-delay.yaml): one `hidutil` command fixed this on my Mac.
 - **Open an iCloud Obsidian vault** — [obsidian](mac/obsidian.yaml): run the `cd` command directly, or [install `cnotes`](setup/) for a short command on each Mac.
 - **A project overview with eza** — [projects](mac/projects.yaml): [install once](setup/), then use `projects` to see project names, Git branches, and status together. Defaults to `~/codex`; accepts your own projects directory.
+- **WSL on Windows** — [wsl](wsl/): enter Ubuntu, check versions and storage, open project folders, and manage Ubuntu packages. The [WSL guide (Chinese)](notes/wsl-guide.md) explains which shell to use and how to move a distribution to D:.
 
 ## Try them
 
@@ -36,6 +37,7 @@ Warp Drive imports a synced copy. Keep the repository YAML as your source. [Impo
 | Folder | Contents |
 | --- | --- |
 | [mac](mac/) | Clipboard, DNS, Caps Lock, Zsh config, Obsidian, project overview |
+| [wsl](wsl/) | Windows PowerShell management and Ubuntu Bash/Zsh workflows; [guide (Chinese)](notes/wsl-guide.md) |
 | [setup](setup/) | Run once in Warp: install `cnotes` and eza-based `projects`, loaded by `.zshrc` |
 | [git](git/) | Git operations, ignore rules, SSH |
 | [claude](claude/) | Claude Code installation, API switching, environment reset |
@@ -43,9 +45,11 @@ Warp Drive imports a synced copy. Keep the repository YAML as your source. [Impo
 | [browser](browser/) | Chrome cache, certificate debugging, Puppeteer |
 | [dev](dev/) | npm, Whistle, Rust, Vue |
 | [system](system/) | Public IP and Windows utilities |
-| [notes](notes/) | Git, SSH, and shell references |
+| [notes](notes/) | Git, SSH, shell, and WSL references |
 
 Windows workflows use PowerShell or Git Bash; check each workflow's description.
+
+For WSL, import the YAML files in `wsl/` and search for `wsl`. Each description starts with its execution environment. `wsl apt install` asks for one package name after it starts. Read [the migration steps](notes/wsl-guide.md#迁移-ubuntu-到-d-盘) before moving a distribution.
 
 ## Install shell commands once
 

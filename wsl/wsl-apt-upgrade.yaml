@@ -1,0 +1,13 @@
+---
+name: "wsl apt upgrade"
+command: |-
+  if [ -z "${WSL_DISTRO_NAME:-}" ] || ! command -v apt >/dev/null 2>&1; then
+    printf '%s\n' '请在 WSL 的 Ubuntu/Debian 终端中运行。'
+  else
+    sudo apt update && sudo apt upgrade
+  fi
+description: "【WSL Ubuntu · Bash/Zsh】更新软件索引，再升级通过 APT 管理的已安装软件，保留升级计划和确认提示。不会自动更新通过独立脚本或 npm 安装的 Codex。"
+arguments: []
+tags: ["wsl", "ubuntu", "linux", "apt", "update", "upgrade"]
+shells: ["bash", "zsh"]
+source_url: "https://documentation.ubuntu.com/server/how-to/software/package-management/"

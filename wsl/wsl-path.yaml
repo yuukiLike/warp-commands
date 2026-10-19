@@ -1,0 +1,14 @@
+---
+name: "wsl path"
+command: |-
+  if [ -n "${WSL_DISTRO_NAME:-}" ]; then
+    pwd
+    df -hT .
+  else
+    printf '%s\n' '请先进入 WSL 的 Ubuntu 终端，再运行这个工作流。'
+  fi
+description: "【WSL Ubuntu · Bash/Zsh】只读查看当前路径及所在文件系统的类型、容量和可用空间。/home/... 通常在 Linux 文件系统，/mnt/c 或 /mnt/d 在 Windows 挂载盘；虚拟磁盘实际在哪个盘，用 PowerShell 的 wsl storage 查看。"
+arguments: []
+tags: ["wsl", "ubuntu", "linux", "path", "disk"]
+shells: ["bash", "zsh"]
+source_url: "https://learn.microsoft.com/en-us/windows/wsl/disk-space"

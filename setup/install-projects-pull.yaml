@@ -1,0 +1,220 @@
+---
+name: "setup projects pull"
+command: |-
+  # 在每台 Mac 的 Warp 中安装一次，之后直接使用 projects-pull。
+  (
+    command_file="$HOME/.config/warp-commands/projects-pull.zsh"
+    zsh_config_directory="${ZDOTDIR:-$HOME}"
+    zsh_config="$zsh_config_directory/.zshrc"
+
+    # 1. 先检查配置与依赖，保留用户已有的 Zsh 设置。
+    if [ ! -d "$zsh_config_directory" ] || [ ! -w "$zsh_config_directory" ]; then
+      printf 'Zsh 配置目录不存在或不可写：%s\n' "$zsh_config_directory" >&2
+      exit 1
+    fi
+    if [ -e "$zsh_config" ] && [ ! -f "$zsh_config" ]; then
+      printf 'Zsh 配置不是普通文件：%s\n' "$zsh_config" >&2
+      exit 1
+    fi
+    if [ -f "$zsh_config" ] && { [ ! -r "$zsh_config" ] || [ ! -w "$zsh_config" ]; }; then
+      printf '无法读写 Zsh 配置：%s\n' "$zsh_config" >&2
+      exit 1
+    fi
+    if ! command -v git >/dev/null 2>&1; then
+      printf '%s\n' '未找到 Git。请先安装 Git，再运行 setup projects pull。' >&2
+      exit 127
+    fi
+
+    # 2. 保存函数；通过语法检查后再替换旧版本。
+    mkdir -p "$HOME/.config/warp-commands" || exit
+    temporary_file=$(mktemp "$command_file.XXXXXX") || exit
+    trap 'rm -f -- "$temporary_file"' EXIT
+
+    cat > "$temporary_file" <<'ZSH' || exit
+  # 更新各项目的本地 main，保留当前分支；默认扫描 ~/codex 的直接子目录。
+  projects-pull() {
+    emulate -L zsh
+    if [[ "$#" -gt 1 ]]; then
+      printf '%s\n' '用法：projects-pull [项目父目录]' >&2
+      return 2
+    fi
+    if [[ "${1:-}" == --help || "${1:-}" == -h ]]; then
+      printf '%s\n' '用法：projects-pull [项目父目录]' \
+        '从 origin/main 快进更新各项目的本地 main，保留当前分支。默认目录：~/codex。'
+      return 0
+    fi
+
+    local directory="${1:-$HOME/codex}"
+    if ! command -v git >/dev/null 2>&1; then
+      printf '%s\n' '未找到 Git。请先安装 Git。' >&2
+      return 127
+    fi
+    if [[ ! -d "$directory" || ! -r "$directory" || ! -x "$directory" ]]; then
+      printf '项目目录不存在或无法读取：%s\n' "$directory" >&2
+      return 1
+    fi
+
+    local project project_name common_git_directory worktree_git_directory current_ref current_ref_after current_branch
+    local main_before main_worktree remote_main working_changes git_output
+    local -i operation_in_progress git_exit updated=0 unchanged=0 skipped=0 failed=0 ignored=0
+
+    printf '%-24s %-24s %s\n' 'PROJECT' 'CURRENT BRANCH' 'MAIN RESULT'
+    # N：空目录不报错；/：只取真实目录，不跟随符号链接。默认不包含隐藏目录。
+    for project in "$directory"/*(N/); do
+      project_name="${project:t}"
+      [[ "$project_name" == node_modules ]] && continue
+      if [[ ! -e "$project/.git" ]]; then
+        printf '%-24s %-24s %s\n' "$project_name" '-' 'ignored: not a Git repo'
+        (( ignored += 1 ))
+        continue
+      fi
+      if ! common_git_directory=$(git -C "$project" rev-parse --git-common-dir 2>/dev/null); then
+        printf '%-24s %-24s %s\n' "$project_name" '-' 'failed: cannot read Git repo'
+        (( failed += 1 ))
+        continue
+      fi
+      [[ "$common_git_directory" == /* ]] || common_git_directory="$project/$common_git_directory"
+
+      current_ref=$(git -C "$project" symbolic-ref --quiet HEAD 2>/dev/null)
+      current_branch="${current_ref#refs/heads/}"
+      [[ -n "$current_branch" ]] || current_branch='(detached)'
+
+      if ! git -C "$project" remote get-url origin >/dev/null 2>&1; then
+        printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'skipped: no origin remote'
+        (( skipped += 1 ))
+        continue
+      fi
+      main_before=$(git -C "$project" rev-parse --verify --quiet refs/heads/main)
+
+      # 只抓取 origin/main；禁止配置中的 prune、标签或子模块抓取扩大操作范围。
+      # + 仅允许远端跟踪引用反映远端改写；本地 main 仍须通过下面的快进检查。
+      if ! git_output=$(git -C "$project" fetch --no-tags --no-recurse-submodules \
+        --no-prune --no-prune-tags --refmap= origin \
+        '+refs/heads/main:refs/remotes/origin/main' 2>&1); then
+        printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'failed: fetch origin/main'
+        printf '%s\n' "$git_output" >&2
+        (( failed += 1 ))
+        continue
+      fi
+      if ! remote_main=$(git -C "$project" rev-parse --verify 'refs/remotes/origin/main^{commit}'); then
+        printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'failed: cannot read origin/main'
+        (( failed += 1 ))
+        continue
+      fi
+
+      # 抓取可能耗时；写入前检查当前状态，避免沿用用户切换分支之前的判断。
+      current_ref_after=$(git -C "$project" symbolic-ref --quiet HEAD 2>/dev/null)
+      if [[ "$current_ref_after" != "$current_ref" ]]; then
+        printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'skipped: current branch changed during fetch'
+        (( skipped += 1 ))
+        continue
+      fi
+      # 旧版 Git 不总能识别其他 worktree 正在 rebase 的 main；直接检查各工作区状态。
+      operation_in_progress=0
+      for worktree_git_directory in "$common_git_directory" "$common_git_directory"/worktrees/*(N/); do
+        if [[ -e "$worktree_git_directory/MERGE_HEAD" || -e "$worktree_git_directory/CHERRY_PICK_HEAD" ||
+              -e "$worktree_git_directory/REVERT_HEAD" || -e "$worktree_git_directory/BISECT_START" ||
+              -d "$worktree_git_directory/sequencer" || -d "$worktree_git_directory/rebase-merge" ||
+              -d "$worktree_git_directory/rebase-apply" ]]; then
+          operation_in_progress=1
+          break
+        fi
+      done
+      if (( operation_in_progress )); then
+        printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'skipped: Git operation in progress'
+        (( skipped += 1 ))
+        continue
+      fi
+      if [[ "$current_ref" != refs/heads/main && -n "$main_before" ]]; then
+        if ! main_worktree=$(git -C "$project" for-each-ref --format='%(worktreepath)' refs/heads/main); then
+          printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'failed: cannot inspect worktrees'
+          (( failed += 1 ))
+          continue
+        fi
+        if [[ -n "$main_worktree" ]]; then
+          printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'skipped: main is in another worktree'
+          (( skipped += 1 ))
+          continue
+        fi
+      fi
+
+      # 当前在 main 时会更新工作区，必须干净；其他分支的未提交改动不受影响。
+      if [[ "$current_ref" == refs/heads/main ]]; then
+        if ! working_changes=$(git -C "$project" status --porcelain --untracked-files=normal --ignore-submodules=none); then
+          printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'failed: cannot inspect working tree'
+          (( failed += 1 ))
+          continue
+        fi
+        if [[ -n "$working_changes" ]]; then
+          printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'skipped: main has uncommitted changes'
+          (( skipped += 1 ))
+          continue
+        fi
+      fi
+
+      if [[ "$main_before" == "$remote_main" ]]; then
+        printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'up to date'
+        (( unchanged += 1 ))
+        continue
+      fi
+
+      # 有本地提交、分叉或无法确认祖先关系时，保留 main 并继续下一个项目。
+      if [[ -n "$main_before" ]]; then
+        if git_output=$(git -C "$project" merge-base --is-ancestor "$main_before" "$remote_main" 2>&1); then
+          : # 本地 main 是远端 main 的祖先，可以快进。
+        else
+          git_exit=$?
+          if [[ "$git_exit" -eq 1 ]]; then
+            printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'skipped: main has local commits; kept'
+            (( skipped += 1 ))
+          else
+            printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'failed: cannot check main history'
+            printf '%s\n' "$git_output" >&2
+            (( failed += 1 ))
+          fi
+          continue
+        fi
+      fi
+
+      if [[ "$current_ref" == refs/heads/main ]]; then
+        git_output=$(git -C "$project" merge --ff-only --no-squash --no-autostash --no-edit --no-stat "$remote_main" 2>&1)
+      else
+        # 仅移动 main 引用，不切换分支或触碰工作区。旧值也必须匹配，避免覆盖并发提交。
+        # main_before 为空时，Git 要求 main 尚不存在，并从远端版本创建它。
+        git_output=$(git -C "$project" update-ref --no-deref -m 'projects-pull: fast-forward origin/main' \
+          refs/heads/main "$remote_main" "$main_before" 2>&1)
+      fi
+      git_exit=$?
+      if [[ "$git_exit" -ne 0 ]]; then
+        printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'failed: update local main'
+        printf '%s\n' "$git_output" >&2
+        (( failed += 1 ))
+        continue
+      fi
+      printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'updated: main'
+      (( updated += 1 ))
+    done
+
+    printf '\n更新 %d · 已是最新 %d · 跳过 %d · 失败 %d · 非 Git 目录 %d\n' \
+      "$updated" "$unchanged" "$skipped" "$failed" "$ignored"
+    (( skipped == 0 && failed == 0 ))
+  }
+  ZSH
+
+    zsh -n "$temporary_file" || exit
+    mv -f -- "$temporary_file" "$command_file" || exit
+
+    # 3. 注册加载；重复安装更新函数，不重复追加配置。
+    source_line='source "$HOME/.config/warp-commands/projects-pull.zsh"'
+    if [ ! -f "$zsh_config" ] || ! grep -Fqx -- "$source_line" "$zsh_config"; then
+      printf '\n# Warp Commands: projects-pull\n%s\n' "$source_line" >> "$zsh_config" || exit
+    fi
+  ) && {
+    source "$HOME/.config/warp-commands/projects-pull.zsh" &&
+      printf '%s\n' '已安装 projects-pull。输入 projects-pull 更新 ~/codex 各项目的 main，保留当前分支。'
+  }
+description: "安装批量更新 main 的 projects-pull 命令：默认扫描 ~/codex，从 origin/main 快进更新本地 main，保留当前分支；注册 .zshrc 加载并立即生效。仅依赖 Git，可独立安装。"
+arguments: []
+tags: ["setup", "install", "projects", "pull", "main", "git", "zsh", "macos"]
+shells: ["zsh"]
+source_url: "https://git-scm.com/docs/git-fetch"

@@ -13,6 +13,7 @@
 - **macOS の Caps Lock 遅延** — [mac caps delay](mac/mac-caps-delay.yaml)：私の Mac では、この `hidutil` コマンドで解消できました。
 - **iCloud の Obsidian 保管庫を開く** — [obsidian](mac/obsidian.yaml)：`cd` コマンドを直接実行できます。各 Mac に [`cnotes` をインストール](setup/)すると、短いコマンドでも移動できます。
 - **eza でプロジェクトを一覧表示** — [projects](mac/projects.yaml)：[一度インストール](setup/)すれば、`projects` でプロジェクト名、Git ブランチ、状態をまとめて確認できます。既定の `~/codex` の代わりに、自分のディレクトリも指定できます。
+- **複数プロジェクトの main を更新** — [projects pull](mac/projects-pull.yaml)：[一度インストール](setup/)すれば、`projects-pull` で各プロジェクトの `origin/main` からローカルの `main` を fast-forward 更新できます。現在のブランチは維持されます。
 - **Windows で WSL を使う** — [wsl](wsl/)：Ubuntu の起動、バージョンと保存先の確認、フォルダ表示、Ubuntu パッケージの管理。[WSL ガイド（中国語）](notes/wsl-guide.md)で実行するシェルと D ドライブへの移動手順を確認できます。
 
 ## 使ってみる
@@ -36,9 +37,9 @@
 
 | フォルダ | 内容 |
 | --- | --- |
-| [mac](mac/) | クリップボード、DNS、Caps Lock、Zsh 設定、Obsidian、プロジェクト一覧 |
+| [mac](mac/) | クリップボード、DNS、Caps Lock、Zsh 設定、Obsidian、プロジェクト一覧と main の一括更新 |
 | [wsl](wsl/) | Windows PowerShell の管理コマンドと Ubuntu Bash/Zsh ワークフロー；[ガイド（中国語）](notes/wsl-guide.md) |
-| [setup](setup/) | Warp で一度インストールし、`.zshrc` から読み込む `cnotes` と eza ベースの `projects` |
+| [setup](setup/) | Warp で一度インストールし、`.zshrc` から読み込む `cnotes`、一覧表示の `projects`、一括更新の `projects-pull` |
 | [git](git/) | Git 操作、除外ルール、SSH |
 | [claude](claude/) | Claude Code のインストール、API 切り替え、環境のリセット |
 | [ai](ai/) | Codex、Gemini、DeepSeek 経由の Claude Code・Codex |
@@ -53,9 +54,9 @@ WSL を使う場合は `wsl/` 内の YAML をインポートし、`wsl` を検�
 
 ## 一度インストールして使う
 
-`setup/` の YAML をインポートします。各 Mac の Warp で **`setup obsidian`** または **`setup projects`** を検索し、選択して実行してください。リポジトリのパス指定は不要です。
+`setup/` から必要な YAML をインポートします。各 Mac の Warp で **`setup obsidian`**、**`setup projects`** または **`setup projects pull`** を検索し、選択して実行してください。リポジトリのパス指定は不要です。
 
-ワークフローはコマンド定義を `~/.config/warp-commands/` に保存し、`.zshrc` に読み込み行を追加して、現在のターミナルにも反映します。`setup projects` は必要に応じて Homebrew で `eza` もインストールします。その後は `cnotes` や `projects "$HOME/explore"` を使えます。`projects` の YAML も、この関数を呼び出します。
+ワークフローはコマンド定義を `~/.config/warp-commands/` に保存し、`.zshrc` に読み込み行を追加して、現在のターミナルにも反映します。`setup projects` は必要に応じて Homebrew で `eza` もインストールします。その後は `cnotes`、`projects "$HOME/explore"`、`projects-pull "$HOME/explore"` を使えます。対応するプロジェクトの YAML も、インストール済みの関数を呼び出します。`projects-pull` は単独でインストールでき、Git と Zsh だけが必要です。
 
 更新するときは、Warp 内の該当ワークフローを更新し、各 Mac でもう一度インストールを実行してください。既存の `.zshrc` 設定は保持され、読み込み行は重複しません。詳しくは [setup](setup/) を参照してください。
 

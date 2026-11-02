@@ -13,6 +13,7 @@ English · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 - **macOS Caps Lock delay** — [mac caps delay](mac/mac-caps-delay.yaml): one `hidutil` command fixed this on my Mac.
 - **Open an iCloud Obsidian vault** — [obsidian](mac/obsidian.yaml): run the `cd` command directly, or [install `cnotes`](setup/) for a short command on each Mac.
 - **A project overview with eza** — [projects](mac/projects.yaml): [install once](setup/), then use `projects` to see project names, Git branches, and status together. Defaults to `~/codex`; accepts your own projects directory.
+- **Update main across projects** — [projects pull](mac/projects-pull.yaml): [install once](setup/), then use `projects-pull` to fast-forward each project's local `main` from `origin/main` while keeping its current branch.
 - **WSL on Windows** — [wsl](wsl/): enter Ubuntu, check versions and storage, open project folders, and manage Ubuntu packages. The [WSL guide (Chinese)](notes/wsl-guide.md) explains which shell to use and how to move a distribution to D:.
 
 ## Try them
@@ -36,9 +37,9 @@ Warp Drive imports a synced copy. Keep the repository YAML as your source. [Impo
 
 | Folder | Contents |
 | --- | --- |
-| [mac](mac/) | Clipboard, DNS, Caps Lock, Zsh config, Obsidian, project overview |
+| [mac](mac/) | Clipboard, DNS, Caps Lock, Zsh config, Obsidian, project overview and batch main updates |
 | [wsl](wsl/) | Windows PowerShell management and Ubuntu Bash/Zsh workflows; [guide (Chinese)](notes/wsl-guide.md) |
-| [setup](setup/) | Run once in Warp: install `cnotes` and eza-based `projects`, loaded by `.zshrc` |
+| [setup](setup/) | Run once in Warp: install `cnotes`, project overview `projects`, and batch updates `projects-pull`, loaded by `.zshrc` |
 | [git](git/) | Git operations, ignore rules, SSH |
 | [claude](claude/) | Claude Code installation, API switching, environment reset |
 | [ai](ai/) | Codex, Gemini, and DeepSeek-backed Claude Code and Codex |
@@ -53,9 +54,9 @@ For WSL, import the YAML files in `wsl/` and search for `wsl`. Each description 
 
 ## Install shell commands once
 
-Import the YAML files in `setup/`. On each Mac, search in Warp for **`setup obsidian`** or **`setup projects`**, select the workflow, and run it. No repository path is required.
+Import the YAML files you need from `setup/`. On each Mac, search in Warp for **`setup obsidian`**, **`setup projects`**, or **`setup projects pull`**, select the workflow, and run it. No repository path is required.
 
-The workflows save command definitions under `~/.config/warp-commands/`, add a `source` line to `.zshrc`, and load the commands into the current terminal. `setup projects` also installs missing `eza` through Homebrew. Then use `cnotes` or `projects "$HOME/explore"`; the `projects` YAML also calls this installed function.
+The workflows save command definitions under `~/.config/warp-commands/`, add a `source` line to `.zshrc`, and load the commands into the current terminal. `setup projects` also installs missing `eza` through Homebrew. Then use `cnotes`, `projects "$HOME/explore"`, or `projects-pull "$HOME/explore"`; the corresponding project workflows also call these installed functions. `projects-pull` installs independently and only requires Git and Zsh.
 
 To update, refresh the corresponding workflow in Warp and run it again on each Mac. Existing `.zshrc` settings are preserved, and the loading line is not duplicated. See [setup](setup/) for details.
 

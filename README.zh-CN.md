@@ -13,6 +13,7 @@
 - **macOS Caps Lock 延迟** — [mac caps delay](mac/mac-caps-delay.yaml)：在我的 Mac 上，一条 `hidutil` 命令就解决了这个问题。
 - **进入 iCloud Obsidian 笔记库** — [obsidian](mac/obsidian.yaml)：直接运行 `cd` 命令，也可以在每台 Mac [安装 `cnotes`](setup/)，之后用短命令进入。
 - **用 eza 查看项目概览** — [projects](mac/projects.yaml)：[安装一次](setup/)，之后用 `projects` 一起查看项目名称、Git 分支和状态。默认 `~/codex`，也可以指定自己的项目目录。
+- **批量更新项目的 main** — [projects pull](mac/projects-pull.yaml)：[安装一次](setup/#批量更新-main)，之后用 `projects-pull` 从各项目的 `origin/main` 快进更新本地 `main`，保留当前分支。
 - **在 Windows 中使用 WSL** — [wsl](wsl/)：进入 Ubuntu、查看版本和存储位置、打开项目目录、管理 Ubuntu 软件。[WSL 指南](notes/wsl-guide.md)说明命令在哪个终端执行，以及怎样把发行版迁到 D 盘。
 
 ## 怎么用
@@ -36,9 +37,9 @@
 
 | 文件夹 | 内容 |
 | --- | --- |
-| [mac](mac/) | 剪贴板、DNS、Caps Lock、Zsh 配置、Obsidian、项目概览 |
+| [mac](mac/) | 剪贴板、DNS、Caps Lock、Zsh 配置、Obsidian、项目概览与批量更新 main |
 | [wsl](wsl/) | Windows PowerShell 管理命令与 Ubuntu Bash/Zsh 工作流；[使用指南](notes/wsl-guide.md) |
-| [setup](setup/) | 在 Warp 中安装一次：由 `.zshrc` 加载的 `cnotes` 和 eza 项目概览 `projects` |
+| [setup](setup/) | 在 Warp 中安装一次：由 `.zshrc` 加载的 `cnotes`、项目概览 `projects` 和批量更新 `projects-pull` |
 | [git](git/) | Git 操作、忽略规则、SSH |
 | [claude](claude/) | Claude Code 安装、API 切换、环境重置 |
 | [ai](ai/) | Codex、Gemini 与 DeepSeek 驱动的 Claude Code、Codex |
@@ -53,9 +54,9 @@ Windows 工作流使用 PowerShell 或 Git Bash，请以各工作流的说明为
 
 ## 安装一次，后续直接使用
 
-导入 `setup/` 中的 YAML。在每台 Mac 的 Warp 中搜索 **`setup obsidian`** 或 **`setup projects`**，选择并执行即可，不需要填写仓库路径。
+导入 `setup/` 中需要的 YAML。在每台 Mac 的 Warp 中搜索 **`setup obsidian`**、**`setup projects`** 或 **`setup projects pull`**，选择并执行即可，不需要填写仓库路径。
 
-工作流会将命令定义保存到 `~/.config/warp-commands/`，向 `.zshrc` 添加加载行，并让当前终端立即生效。`setup projects` 还会在缺少 `eza` 时通过 Homebrew 安装。之后用 `cnotes` 或 `projects "$HOME/explore"`；`projects` YAML 也调用这个安装好的函数。
+工作流会将命令定义保存到 `~/.config/warp-commands/`，向 `.zshrc` 添加加载行，并让当前终端立即生效。`setup projects` 还会在缺少 `eza` 时通过 Homebrew 安装。之后用 `cnotes`、`projects "$HOME/explore"` 或 `projects-pull "$HOME/explore"`；对应的项目工作流也调用安装好的函数。`projects-pull` 可独立安装，仅依赖 Git 和 Zsh。
 
 更新时，先更新 Warp 中的对应工作流，再在各台 Mac 重新执行安装。已有 `.zshrc` 设置会保留，加载行不会重复添加。详细说明见 [setup](setup/)。
 

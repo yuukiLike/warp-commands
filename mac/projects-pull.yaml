@@ -1,0 +1,17 @@
+---
+name: "projects pull"
+command: |-
+  if ! typeset -f projects-pull >/dev/null 2>&1; then
+    printf '%s\n' '请先在 Warp 中运行 setup projects pull 工作流。' >&2
+    false
+  else
+    projects-pull "{{directory}}"
+  fi
+description: "批量从 origin/main 快进更新各项目的本地 main，保留当前分支。当前在 main 时只更新干净工作区；本地 main 有额外提交或被其他 worktree 使用时跳过。先运行 setup projects pull。"
+arguments:
+  - name: "directory"
+    arg_type: "Text"
+    description: "项目所在的父目录，默认 ~/codex；仅扫描直接子目录，支持空格。"
+    default_value: "$HOME/codex"
+tags: ["projects", "pull", "main", "git", "development"]
+shells: ["zsh"]

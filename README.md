@@ -2,71 +2,34 @@
 
 English · [简体中文](README.zh-CN.md) · [日本語](README.ja.md)
 
-**Commands I use in Warp. Maybe you'll find them useful too.**
+Warp YAML workflows I use. Take what you need.
 
-![Warp Commands — Local-first YAML workflows. Search. Fill. Run.](assets/warp-cover.png)
+![Warp Commands](assets/warp-cover.png)
 
-[local-first](https://github.com/topics/local-first) · [warp](https://github.com/topics/warp) · [yaml](https://github.com/topics/yaml)
+## Use
 
-## You might need these
+```sh
+git clone https://github.com/yuukiLike/warp-commands.git
+```
 
-- **macOS Caps Lock delay** — [mac caps delay](mac/mac-caps-delay.yaml): one `hidutil` command fixed this on my Mac.
-- **Open an iCloud Obsidian vault** — [obsidian](mac/obsidian.yaml): run the `cd` command directly, or [install `cnotes`](setup/) for a short command on each Mac.
-- **A project overview with eza** — [projects](mac/projects.yaml): [install once](setup/), then use `projects` to see project names, Git branches, and status together. Defaults to `~/codex`; accepts your own projects directory.
-- **Update main across projects** — [projects pull](mac/projects-pull.yaml): [install once](setup/), then use `projects-pull` to fast-forward each project's local `main` from `origin/main` while keeping its current branch.
-- **WSL on Windows** — [wsl](wsl/): enter Ubuntu, check versions and storage, open project folders, and manage Ubuntu packages. The [WSL guide (Chinese)](notes/wsl-guide.md) explains which shell to use and how to move a distribution to D:.
+1. In Warp Drive → personal workspace **+ → Import**, select YAML files or command folders, not the entire repository.
+2. Search, fill in arguments, and run. Check each workflow for its required shell.
 
-## Try them
+Imports are copies; refresh them when the repository changes. See [setup](setup/) to install or update `cnotes`, `projects`, and `projects-pull`.
 
-1. **Clone**
+[Import screenshot](assets/warp-import.png) · [Local YAML usage](https://docs.warp.dev/terminal/entry/yaml-workflows)
 
-   ```sh
-   git clone https://github.com/yuukiLike/warp-commands.git
-   ```
-
-2. **Import** — Open Warp Drive → personal workspace **+ → Import**. Inside the cloned `warp-commands/` folder, select the `.yaml` files you want or a command folder such as `mac/` or `git/`. **Do not select the repository's top-level folder.**
-3. **Use** — Search for a command such as `mac clipboard`, select it, fill in the arguments, and run.
-
-`assets/` contains README images; Markdown files and `notes/` are documentation. **Leave these out of the import.** The YAML files in `setup/` are installation workflows; import the ones you need.
-
-![Warp Drive: personal workspace + menu → Import](assets/warp-import.png)
-
-Warp Drive imports a synced copy. Keep the repository YAML as your source. [Import guide →](https://docs.warp.dev/knowledge-and-collaboration/warp-drive/#importing-files-into-warp-drive)
-
-## Pick what you need
+## Folders
 
 | Folder | Contents |
 | --- | --- |
-| [mac](mac/) | Clipboard, DNS, Caps Lock, Zsh config, Obsidian, project overview and batch main updates |
-| [wsl](wsl/) | Windows PowerShell management and Ubuntu Bash/Zsh workflows; [guide (Chinese)](notes/wsl-guide.md) |
-| [setup](setup/) | Run once in Warp: install `cnotes`, project overview `projects`, and batch updates `projects-pull`, loaded by `.zshrc` |
-| [git](git/) | Git operations, ignore rules, SSH |
-| [claude](claude/) | Claude Code installation, API switching, environment reset |
-| [ai](ai/) | Codex, Gemini, and DeepSeek-backed Claude Code and Codex |
-| [browser](browser/) | Chrome cache, certificate debugging, Puppeteer |
+| [mac](mac/) | macOS tools, Obsidian, project overview and batch main updates |
+| [wsl](wsl/) | Windows / Ubuntu tools · [guide (Chinese)](notes/wsl-guide.md) |
+| [setup](setup/) | Install `cnotes`, `projects`, and `projects-pull` |
+| [git](git/) | Git and SSH |
+| [claude](claude/) | Claude Code installation and configuration |
+| [ai](ai/) | Codex, Gemini, DeepSeek |
+| [browser](browser/) | Chrome and Puppeteer |
 | [dev](dev/) | npm, Whistle, Rust, Vue |
-| [system](system/) | Public IP and Windows utilities |
-| [notes](notes/) | Git, SSH, shell, and WSL references |
-
-Windows workflows use PowerShell or Git Bash; check each workflow's description.
-
-For WSL, import the YAML files in `wsl/` and search for `wsl`. Each description starts with its execution environment. `wsl apt install` asks for one package name after it starts. Read [the migration steps](notes/wsl-guide.md#迁移-ubuntu-到-d-盘) before moving a distribution.
-
-## Install shell commands once
-
-Import the YAML files you need from `setup/`. On each Mac, search in Warp for **`setup obsidian`**, **`setup projects`**, or **`setup projects pull`**, select the workflow, and run it. No repository path is required.
-
-The workflows save command definitions under `~/.config/warp-commands/`, add a `source` line to `.zshrc`, and load the commands into the current terminal. `setup projects` also installs missing `eza` through Homebrew. Then use `cnotes`, `projects "$HOME/explore"`, or `projects-pull "$HOME/explore"`; the corresponding project workflows also call these installed functions. `projects-pull` installs independently and only requires Git and Zsh.
-
-To update, refresh the corresponding workflow in Warp and run it again on each Mac. Existing `.zshrc` settings are preserved, and the loading line is not duplicated. See [setup](setup/) for details.
-
-## Local use
-
-To load YAML directly from local files, copy the workflows you need into:
-
-| Platform | Directory |
-| --- | --- |
-| macOS | `$HOME/.warp/workflows/` |
-| Windows (PowerShell) | `$env:APPDATA\warp\Warp\data\workflows\` |
-
-Open Workflow Search in Warp to find them. Update your copies when the source changes. [YAML workflow guide →](https://docs.warp.dev/terminal/entry/yaml-workflows)
+| [system](system/) | Public IP and Windows tools |
+| [notes](notes/) | Reference notes |

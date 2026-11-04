@@ -1,0 +1,14 @@
+---
+# 查看当前设置：defaults read com.apple.finder AppleShowAllFiles
+# 1 表示显示，0 表示隐藏；键不存在表示使用系统默认值。
+# true 显示隐藏文件，false 恢复隐藏；执行后重启 Finder。
+name: "mac finder hidden"
+command: 'defaults write com.apple.finder AppleShowAllFiles -bool "{{enabled}}" && killall Finder'
+description: "显示或隐藏 Finder 中的隐藏文件，例如 .git、.env。默认显示，执行后重启 Finder。"
+arguments:
+  - name: "enabled"
+    arg_type: "Text"
+    description: "true 显示隐藏文件；false 隐藏。"
+    default_value: "true"
+tags: ["macos", "finder", "hidden-files", "system"]
+shells: ["bash", "zsh"]

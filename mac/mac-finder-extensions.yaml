@@ -1,0 +1,14 @@
+---
+# 查看当前设置：defaults read NSGlobalDomain AppleShowAllExtensions
+# 1 表示始终显示所有扩展名，0 表示按各文件自身设置显示；键不存在表示使用系统默认值。
+# true 始终显示所有扩展名；false 恢复按各文件的“隐藏扩展名”设置显示或隐藏。
+name: "mac finder extensions"
+command: 'defaults write NSGlobalDomain AppleShowAllExtensions -bool "{{enabled}}" && killall Finder'
+description: "切换 Finder 是否始终显示所有文件扩展名。关闭后按各文件自身设置显示或隐藏；默认开启，执行后重启 Finder。"
+arguments:
+  - name: "enabled"
+    arg_type: "Text"
+    description: "true 显示所有扩展名；false 按各文件的“隐藏扩展名”设置显示或隐藏。"
+    default_value: "true"
+tags: ["macos", "finder", "file-extensions", "system"]
+shells: ["bash", "zsh"]

@@ -1,0 +1,14 @@
+---
+# 查看当前设置：defaults read com.apple.finder ShowStatusBar
+# 1 表示显示，0 表示隐藏；键不存在表示使用系统默认值。
+# true 显示状态栏，false 隐藏；执行后重启 Finder。
+name: "mac finder statusbar"
+command: 'defaults write com.apple.finder ShowStatusBar -bool "{{enabled}}" && killall Finder'
+description: "显示或隐藏 Finder 状态栏，用于查看项目数量和磁盘可用空间。默认显示，执行后重启 Finder。"
+arguments:
+  - name: "enabled"
+    arg_type: "Text"
+    description: "true 显示状态栏；false 隐藏。"
+    default_value: "true"
+tags: ["macos", "finder", "status", "system"]
+shells: ["bash", "zsh"]

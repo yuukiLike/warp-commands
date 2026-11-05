@@ -1,0 +1,12 @@
+---
+name: "pi models"
+command: 'pi --list-models "{{filter}}"'
+description: "按供应商或模型关键词查看 Pi 模型目录。目录条目不代表当前账号已有调用权限；精简日常列表用 /scoped-models 或 settings.json 的 enabledModels。"
+arguments:
+  - name: "filter"
+    arg_type: "Text"
+    description: "供应商或模型关键词，例如 openai、deepseek、gpt-6。"
+    default_value: "openai"
+tags: ["pi", "models", "search"]
+source_url: "https://pi.dev/docs/latest/models"
+shells: ["bash", "zsh"]

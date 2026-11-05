@@ -1,0 +1,8 @@
+---
+name: "pi models refresh"
+command: "pi update --models"
+description: "刷新 Pi 模型目录。刷新目录不会验证每个模型的账号权限；常用模型范围在 /scoped-models 中勾选后按 Ctrl+S 保存。"
+arguments: []
+tags: ["pi", "models", "update"]
+source_url: "https://pi.dev/docs/latest/models"
+shells: ["bash", "zsh"]

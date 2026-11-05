@@ -1,0 +1,20 @@
+---
+name: "pi model"
+command: 'pi --provider "{{provider}}" --model "{{model}}" --thinking "{{thinking}}"'
+description: "指定供应商、模型与思考级别启动 Pi，默认 Sol + max；填写的级别会覆盖本次启动设置。日常沿用配置直接运行 pi。先通过 /login 或环境变量配置凭据。"
+arguments:
+  - name: "provider"
+    arg_type: "Text"
+    description: "供应商 ID，例如 openai 或 deepseek。"
+    default_value: "openai"
+  - name: "model"
+    arg_type: "Text"
+    description: "该供应商下的模型 ID，不带供应商前缀。"
+    default_value: "gpt-6.1-sol"
+  - name: "thinking"
+    arg_type: "Text"
+    description: "默认 max；需要更快响应时可改为 low、medium、high 或 xhigh，以模型实际支持为准。"
+    default_value: "max"
+tags: ["pi", "model", "thinking", "openai"]
+source_url: "https://pi.dev/docs/latest/cli"
+shells: ["bash", "zsh"]

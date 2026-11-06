@@ -1,0 +1,36 @@
+---
+name: "pi settings overwrite"
+command: |-
+  node <<'NODE'
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const dir = process.env.PI_CODING_AGENT_DIR || path.join(process.env.HOME, ".pi", "agent");
+  const file = path.join(dir, "settings.json");
+  for (const target of [dir, file]) {
+    if (fs.lstatSync(target, { throwIfNoEntry: false })?.isSymbolicLink()) {
+      throw new Error(`拒绝写入符号链接：${target}`);
+    }
+  }
+
+  const settings = {
+    defaultProvider: "openai",
+    defaultModel: "gpt-6.1-sol",
+    defaultThinkingLevel: "max",
+    enabledModels: [
+      "openai/gpt-6.1-sol",
+      "openai/gpt-6-astra",
+      "openai/gpt-6.1-terra",
+      "openai/gpt-6-luna",
+      "deepseek/deepseek-v4-pro",
+      "deepseek/deepseek-flash"
+    ]
+  };
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(settings, null, 2) + "\n");
+  console.log(`已覆盖：${file}；默认 gpt-6.1-sol + max。`);
+  NODE
+description: "整份覆盖用户 settings.json，不备份、不保留旧设置。默认 Sol + max，加入 OpenAI、DeepSeek 常用模型；不修改登录凭据。先退出 Pi 再执行，需要 Node.js。"
+arguments: []
+tags: ["pi", "settings", "overwrite", "openai", "deepseek"]
+source_url: "https://pi.dev/docs/latest/settings"
+shells: ["bash", "zsh"]

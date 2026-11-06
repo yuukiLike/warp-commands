@@ -28,7 +28,7 @@ Imports are copies; refresh them when the repository changes. See [setup](setup/
 | [setup](setup/) | Install `cnotes`, `projects`, and `projects-pull` |
 | [git](git/) | Git and SSH |
 | [claude](claude/) | Claude Code installation and configuration |
-| [pi](pi/) | Pi model and reasoning settings, everyday keyboard shortcuts |
+| [pi](pi/) | Pi models, reasoning levels, overwrite and incremental setup |
 | [ai](ai/) | Codex, Gemini, DeepSeek |
 | [browser](browser/) | Chrome and Puppeteer |
 | [dev](dev/) | npm, Whistle, Rust, Vue |

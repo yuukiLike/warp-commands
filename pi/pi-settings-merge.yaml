@@ -1,0 +1,53 @@
+---
+name: "pi settings merge"
+command: |-
+  node <<'NODE'
+  const fs = require("node:fs");
+  const path = require("node:path");
+  const dir = process.env.PI_CODING_AGENT_DIR || path.join(process.env.HOME, ".pi", "agent");
+  const file = path.join(dir, "settings.json");
+  for (const target of [dir, file]) {
+    if (fs.lstatSync(target, { throwIfNoEntry: false })?.isSymbolicLink()) {
+      throw new Error(`拒绝写入符号链接：${target}`);
+    }
+  }
+
+  const settings = fs.existsSync(file) ? JSON.parse(fs.readFileSync(file, "utf8")) : {};
+  if (!settings || typeof settings !== "object" || Array.isArray(settings)) {
+    throw new Error("settings.json 必须是 JSON 对象；未修改原文件。");
+  }
+  if (settings.enabledModels !== undefined &&
+      (!Array.isArray(settings.enabledModels) || settings.enabledModels.some(id => typeof id !== "string"))) {
+    throw new Error("enabledModels 必须是字符串数组；未修改原文件。");
+  }
+  if (settings.modelThinkingLevels !== undefined &&
+      (!settings.modelThinkingLevels || typeof settings.modelThinkingLevels !== "object" || Array.isArray(settings.modelThinkingLevels))) {
+    throw new Error("modelThinkingLevels 必须是对象；未修改原文件。");
+  }
+
+  const models = [
+    "openai/gpt-6.1-sol",
+    "openai/gpt-6-astra",
+    "openai/gpt-6.1-terra",
+    "openai/gpt-6-luna",
+    "deepseek/deepseek-v4-pro",
+    "deepseek/deepseek-flash"
+  ];
+  settings.defaultProvider = "openai";
+  settings.defaultModel = "gpt-6.1-sol";
+  settings.defaultThinkingLevel = "max";
+  settings.enabledModels = [...new Set([...(settings.enabledModels ?? []), ...models])];
+  for (const id of models) {
+    if (settings.modelThinkingLevels && Object.hasOwn(settings.modelThinkingLevels, id)) {
+      settings.modelThinkingLevels[id] = "max";
+    }
+  }
+  fs.mkdirSync(dir, { recursive: true });
+  fs.writeFileSync(file, JSON.stringify(settings, null, 2) + "\n");
+  console.log(`已增量更新：${file}；默认 gpt-6.1-sol + max。`);
+  NODE
+description: "增量更新用户 settings.json，不备份。设为 Sol + max，追加 OpenAI、DeepSeek 常用模型并去重，同名模型已有的思考级别改为 max；其他模型、包、扩展和偏好保留。配置不存在时创建，格式错误时停止。先退出 Pi 再执行，需要 Node.js。"
+arguments: []
+tags: ["pi", "settings", "merge", "openai", "deepseek"]
+source_url: "https://pi.dev/docs/latest/settings"
+shells: ["bash", "zsh"]

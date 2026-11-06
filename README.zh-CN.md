@@ -28,7 +28,7 @@ git clone https://github.com/yuukiLike/warp-commands.git
 | [setup](setup/) | 安装 `cnotes`、`projects`、`projects-pull` |
 | [git](git/) | Git 与 SSH |
 | [claude](claude/) | Claude Code 安装与配置 |
-| [pi](pi/) | Pi 常用模型、思考级别配置与快捷键速查 |
+| [pi](pi/) | Pi 常用模型、思考级别与覆盖／增量配置 |
 | [ai](ai/) | Codex、Gemini、DeepSeek |
 | [browser](browser/) | Chrome 与 Puppeteer |
 | [dev](dev/) | npm、Whistle、Rust、Vue |

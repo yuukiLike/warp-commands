@@ -1,5 +1,4 @@
 {
-  "$schema": "https://pi.dev/schemas/settings.schema.json",
   "defaultProvider": "openai",
   "defaultModel": "gpt-6.1-sol",
   "defaultThinkingLevel": "max",
@@ -7,13 +6,8 @@
     "openai/gpt-6.1-sol",
     "openai/gpt-6-astra",
     "openai/gpt-6.1-terra",
-    "openai/gpt-6-luna"
-  ],
-  "modelThinkingLevels": {
-    "openai/gpt-6.1-sol": "max",
-    "openai/gpt-6-astra": "max",
-    "openai/gpt-6.1-terra": "max",
-    "openai/gpt-6-luna": "max"
-  },
-  "defaultTools": ["+codemode"]
+    "openai/gpt-6-luna",
+    "deepseek/deepseek-v4-pro",
+    "deepseek/deepseek-flash"
+  ]
 }

@@ -1,7 +1,7 @@
 ---
 name: "pi settings"
-command: 'nano "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/settings.json"'
-description: "用 nano 编辑 Pi 用户配置：默认模型、enabledModels 常用范围、defaultThinkingLevel 和 modelThinkingLevels。保存手动修改后重启 Pi。遵循 PI_CODING_AGENT_DIR，默认 ~/.pi/agent。"
+command: 'mkdir -p "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}" && vi "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/settings.json"'
+description: "用 vi 编辑用户 settings.json，目录不存在时先创建。默认模型改 defaultProvider/defaultModel，常用集合改 enabledModels，思考级别改 defaultThinkingLevel/modelThinkingLevels；同名字段修改原值，保留其他设置。vi 按 i 编辑，Esc 后输入 :wq 保存退出。保存后在 Pi 执行 /reload，验证启动默认值时退出后重新运行 pi。遵循 PI_CODING_AGENT_DIR，默认 ~/.pi/agent；项目 .pi/settings.json 可覆盖用户设置。"
 arguments: []
 tags: ["pi", "settings", "config", "models", "thinking"]
 source_url: "https://pi.dev/docs/latest/configuration"

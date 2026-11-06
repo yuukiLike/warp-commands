@@ -1,10 +1,24 @@
 # Pi 配置与速查
 
-常用模型、思考级别和快捷键集中放在这里。默认使用 **Sol + max**，聊天、看图、图片生成、TTS 和语音转写按用途选择。Pi 操作按 `1.5.0` 核对，OpenAI 模型资料核对日期为 **2026-11-05**。
+默认使用 **Sol + max**，按用途切换其他模型。Pi 操作按 `1.5.0` 核对，OpenAI 模型资料核对日期为 **2026-11-05**。
 
-[默认配置模板](settings.json) · [模型怎么选](#按用途选择模型) · [快捷键速查](shortcuts.md)
+[默认配置模板](settings.json) · [模型怎么选](#按用途选择模型) · [快捷键速查](#快捷键速查)
 
-## 配置文件在哪里
+## 设置默认模型与常用集合
+
+在 **Pi 输入框**操作即可保存相关配置，通常无需手动合并模板。
+
+1. **默认模型**：输入 `/model`，搜索并选中 `openai/gpt-6.1-sol`，按 `Ctrl+S` 保存。下次直接运行 `pi` 开始新会话时使用 Sol。
+2. **常用集合**：输入 `/scoped-models`。想从零选择时，先清空搜索词，按 `Ctrl+X` 取消全选；逐个搜索模型，用方向键定位、`Enter` 勾选，最后按 `Ctrl+S` 保存、`Escape` 返回。至少保留一个可用模型，并把默认的 Sol 留在集合中。
+3. **默认思考级别**：输入 `/thinking`，选中 `max` 后按 `Ctrl+S` 保存。已有 `modelThinkingLevels` 时，对应模型的单独设置优先。
+
+之后临时切到 Terra，在 `/model` 中按 `Enter` 即可；按 `Ctrl+P` 也可在常用集合里循环切换。这些操作只改变当前会话，下次新启动仍用 Sol；在 Terra 上按 `Ctrl+S` 才会把它保存为新的默认模型。选择与保存规则见 [Pi Models](https://pi.dev/docs/latest/models#select-a-model)。
+
+`pi -c`、`pi -r` 会恢复历史会话记录的模型与思考级别。如果直接运行 `pi` 仍未使用 Sol，检查项目 `.pi/settings.json` 是否覆盖了默认值、启动命令是否指定了 `--model`，以及 Sol 是否在常用集合中且认证可用。
+
+## 编辑配置
+
+需要调整界面之外的选项时，再编辑对应文件：
 
 | 文件 | 配置内容 |
 | --- | --- |
@@ -14,75 +28,35 @@
 | `~/.pi/agent/models.json` | 自定义 API 地址、模型及模型参数覆盖 |
 | `~/.pi/agent/auth.json` | 保存的 API Key / OAuth 凭据，通常通过 `/login`、`/logout` 管理 |
 
-精简模型列表与调整思考级别，编辑 **`settings.json`**。设置了 `PI_CODING_AGENT_DIR` 时，用户配置目录以这个环境变量为准；`pi settings` 工作流会使用它。位置与作用域见 [Pi Configuration](https://pi.dev/docs/latest/configuration)。
-
-## 默认配置
-
-仓库的 [settings.json](settings.json) 是可复用模板，Pi 不会自动加载 `pi/settings.json`。将以下字段合并到用户配置 `~/.pi/agent/settings.json`；只想对某个项目生效时，合并到该项目的 `.pi/settings.json`，信任项目后加载。保留其他设置，保存后重启 Pi 开始新会话。
-
-已有 `defaultTools` 时，把 `+codemode` 追加到原数组；合并 `modelThinkingLevels` 时保留其他模型的条目。
-
-思考级别统一为 `max`，与当前常用的 Codex 配置一致。默认启动模型沿用 `gpt-6.1-sol`。
-
-```json
-{
-  "$schema": "https://pi.dev/schemas/settings.schema.json",
-  "defaultProvider": "openai",
-  "defaultModel": "gpt-6.1-sol",
-  "defaultThinkingLevel": "max",
-  "enabledModels": [
-    "openai/gpt-6.1-sol",
-    "openai/gpt-6-astra",
-    "openai/gpt-6.1-terra",
-    "openai/gpt-6-luna"
-  ],
-  "modelThinkingLevels": {
-    "openai/gpt-6.1-sol": "max",
-    "openai/gpt-6-astra": "max",
-    "openai/gpt-6.1-terra": "max",
-    "openai/gpt-6-luna": "max"
-  },
-  "defaultTools": ["+codemode"]
-}
-```
-
-| 字段 | 含义 |
-| --- | --- |
-| `defaultProvider` + `defaultModel` | 新会话的默认供应商与模型 |
-| `enabledModels` | `/model` 默认展示及 `Ctrl+P` 循环切换的常用范围，每项写成 `供应商/模型ID` |
-| `defaultThinkingLevel` | 未单独指定模型思考级别时的默认值 |
-| `modelThinkingLevels` | 按模型设置思考级别，优先于全局默认值 |
-| `defaultTools` | `+codemode` 在现有工具上增加脚本调用能力，可调用 Pi 支持的图片模型 |
-
-四个常用聊天模型都显式设为 `max`，合并配置时也会替换旧示例中 Luna 的 `low`。恢复历史会话仍会恢复该会话记录的模型与思考级别；需要改当前会话时用 `/thinking`。字段说明见 [Pi Settings](https://pi.dev/docs/latest/settings#model-and-thinking)。
-
-`max` 优先考虑推理深度；简单任务需要更快响应时，临时切到 `low` 或 `medium`。图片、TTS 等专用模型有各自的调用入口，见下方选型表。
-
-继续使用 DeepSeek 时，可以把 `deepseek/deepseek-v4-pro`、`deepseek/deepseek-flash` 加入 `enabledModels`；需要以 DeepSeek 启动，再将 `defaultProvider` 与 `defaultModel` 改成对应值。认证仍由已保存的凭据或环境变量提供。
-
-### low、high、max 支持哪些
-
-| 模型 | Pi 中可选级别 |
-| --- | --- |
-| `gpt-6.1-sol`、`gpt-6-astra` | `low`、`medium`、`high`、`xhigh`、`max` |
-| `gpt-6.1-terra`、`gpt-6-luna` | `off`、`low`、`medium`、`high`、`xhigh`、`max` |
-
-Pi 会根据当前模型显示支持的级别。`off` 在上述支持关闭推理的 OpenAI 模型上对应 API 的 `none`；这些模型没有 `minimal` 档。范围以当前 `/thinking` 为准，单独运行时也可以指定：
+以下命令在 **系统终端**执行，用 `vi` 编辑用户配置；目录不存在时先创建。设置了 `PI_CODING_AGENT_DIR` 时，使用该目录，默认是 `~/.pi/agent`。
 
 ```sh
-pi --provider openai --model gpt-6.1-sol --thinking max
+mkdir -p "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}" && vi "${PI_CODING_AGENT_DIR:-$HOME/.pi/agent}/settings.json"
 ```
 
-### 用界面从零勾选
+按 `i` 进入编辑；改完按 `Esc`，输入 `:wq` 后回车保存退出；放弃修改用 `Esc` → `:q!` → 回车。保存后在 Pi 输入 `/reload` 重载配置；验证启动默认模型时，退出后直接运行 `pi`。
 
-1. 在 Pi 输入 `/scoped-models`。
-2. 搜索框留空，按 `Ctrl+X` 取消全选。
-3. 搜索模型，用方向键定位，按 `Enter` 勾选；清空搜索词后选择其他模型。
-4. 至少保留一个当前可用模型，按 `Ctrl+S` 保存，再按 `Escape` 返回。
+只对当前项目生效时，在项目目录执行 `mkdir -p .pi && vi .pi/settings.json`。项目受信任后，项目设置覆盖同名用户设置；在 Pi 中保存全局默认模型后，仍需留意项目覆盖。位置与作用域见 [Pi Configuration](https://pi.dev/docs/latest/configuration)。
 
-之后 `/model` 默认进入 `scoped`，只显示常用范围；按 `Tab` 可切到 `all` 查看全部。只勾选而不保存，修改仅对当前会话有效。
+### 使用模板与处理同名配置
 
-Pi `1.5.0` 首次默认全选，没有“首次默认空选”的设置。`enabledModels` 留空或设为 `[]` 会回退到全部模型。Pi 仍会读取完整目录供选择；目录中有某个模型，不代表当前 Key 已有调用权限。目录与模型选择见 [Pi Models](https://pi.dev/docs/latest/models)。
+仓库的 [settings.json](settings.json) 是模板，Pi 不会自动加载它。配置文件不存在时可粘贴完整模板；已有配置时，按下表修改原字段，保留其他设置。每个键只出现一次，整个文件保留一个 JSON 对象，避免注释和末尾逗号。
+
+| 字段 | 模板内容与合并规则 |
+| --- | --- |
+| `defaultProvider` + `defaultModel` | 固定 Sol 时，将原值分别改为 `openai`、`gpt-6.1-sol` |
+| `enabledModels` | 常用集合，每项为 `供应商/模型ID`；采用模板的四个模型，或保留需要的旧模型并添加新模型，避免重复 |
+| `defaultThinkingLevel` | 默认级别改为 `max` |
+| `modelThinkingLevels` | 按 `供应商/模型ID` 逐项合并；采用模板时将四个同名模型的级别改为 `max`，保留其他模型条目 |
+| `defaultTools` | 在原数组追加一次 `+codemode`，保留原有工具；启用脚本调用及 Pi 支持的图片模型入口 |
+
+`modelThinkingLevels` 优先于 `defaultThinkingLevel`。例如原来 Luna 单独设置为 `low`，仅将全局默认改为 `max` 不会覆盖它，需要同步修改 Luna 的条目。字段说明见 [Pi Settings](https://pi.dev/docs/latest/settings#model-and-thinking)。
+
+常用集合未设置或为 `[]` 时回退到全部模型；`/model` 中可按 `Tab` 在常用与全部之间切换。目录中有某个模型，不代表当前账号已有调用权限。
+
+继续使用 DeepSeek 时，可将 `deepseek/deepseek-v4-pro`、`deepseek/deepseek-flash` 加入 `enabledModels`；改用它作为默认模型时，再修改 `defaultProvider` 与 `defaultModel`。认证由已保存的凭据或环境变量提供。
+
+`max` 优先考虑推理深度；简单任务可临时切到 `low` 或 `medium`。Sol、Astra 支持 `low` 到 `max`，Terra、Luna 还支持 `off`（对应 API 的 `none`）；具体选项以 `/thinking` 为准。
 
 ## 按用途选择模型
 
@@ -122,7 +96,7 @@ Pi `1.5.0` 没有原生 TTS 模型选择器或 `defaultTtsModel` 设置；接入
 
 | Warp 搜索名 | 实际终端命令 |
 | --- | --- |
-| [pi settings](pi-settings.yaml) | `nano ~/.pi/agent/settings.json`（默认路径） |
+| [pi settings](pi-settings.yaml) | 用 `vi` 编辑用户配置，完整命令见[编辑配置](#编辑配置) |
 | [pi model](pi-model.yaml) | `pi --provider <供应商> --model <模型> --thinking <级别>` |
 | [pi models](pi-models.yaml) | `pi --list-models <关键词>` |
 | [pi models refresh](pi-models-refresh.yaml) | `pi update --models` |
@@ -133,7 +107,7 @@ Warp 导入的是副本；更新 YAML 后需重新导入。
 
 ## 会话内常用命令
 
-以下命令在 **Pi 输入框**执行。
+以下命令在 **Pi 输入框**执行；`/settings` 打开偏好界面，Warp 的 `pi settings` 工作流则打开配置文件。
 
 | 命令 | 用途 |
 | --- | --- |
@@ -150,3 +124,32 @@ Warp 导入的是副本；更新 YAML 后需重新导入。
 | `/quit` | 退出 Pi |
 
 在系统终端继续最近会话用 `pi -c`，选择历史会话用 `pi -r`。完整命令见 [Pi Slash Commands](https://pi.dev/docs/latest/slash-commands)。
+
+## 快捷键速查
+
+macOS / 普通 Linux 默认键位；当前设置看 `/hotkeys`，选择器内看底部提示。完整键位见 [Pi Keybindings](https://pi.dev/docs/latest/keybindings)。
+
+| 按键 | 主输入框操作 |
+| --- | --- |
+| `Ctrl+L` | 选择模型 |
+| `Ctrl+P` / `Ctrl+Shift+P` | 常用集合中的下一个 / 上一个模型 |
+| `Shift+Tab` | 切换思考级别 |
+| `Escape` | 中止当前运行 |
+| `Shift+Enter` | 换行（需终端支持） |
+| `Alt+Enter` | 追加请求，等当前工作结束后执行 |
+| `Ctrl+V` | 粘贴文本或图片 |
+| `Ctrl+O` | 折叠 / 展开工具输出 |
+| `Ctrl+T` | 折叠 / 展开思考内容 |
+| `Ctrl+C` | 清空输入 |
+| `Ctrl+D` | 输入为空时退出 |
+
+| 界面 | 按键 | 操作 |
+| --- | --- | --- |
+| `/model` | 输入关键词 | 搜索模型或供应商 |
+| `/model` | `Enter` / `Ctrl+S` | 仅当前会话切换 / 切换并保存为默认模型 |
+| `/model` | `Tab` | 常用 / 全部（已设置常用范围时） |
+| `/thinking` | `Enter` / `Ctrl+S` | 仅当前会话应用 / 应用并保存默认级别 |
+| `/scoped-models` | `Ctrl+X` | 取消全选；有搜索词时只取消搜索结果 |
+| `/scoped-models` | `Enter` | 勾选 / 取消当前模型 |
+| `/scoped-models` | `Ctrl+S` | 保存常用集合；未保存仅对当前会话有效 |
+| 以上界面 | `Escape` | 返回 |

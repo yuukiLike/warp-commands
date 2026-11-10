@@ -15,7 +15,7 @@ git clone https://github.com/yuukiLike/warp-commands.git
 1. Warp Drive → 個人用ワークスペースの **+ → Import** で、必要な YAML やコマンド用フォルダを選択。リポジトリ全体は選ばないでください。
 2. 検索して引数を入力し、実行。実行環境は各ワークフローの説明を確認してください。
 
-インポートされるのはコピーです。元の更新時にはコピーも更新してください。`cnotes`、`projects`、`projects-pull` のインストールと更新は [setup](setup/) を参照。
+インポートされるのはコピーです。元の更新時にはコピーも更新してください。`cnotes`、`projects`、`projects-pull`、Zed のタスクとキーバインドのインストール・更新は [setup](setup/) を参照。
 
 [インポート画面](assets/warp-import.png) · [ローカル YAML の使い方](https://docs.warp.dev/terminal/entry/yaml-workflows)
 
@@ -25,7 +25,7 @@ git clone https://github.com/yuukiLike/warp-commands.git
 | --- | --- |
 | [mac](mac/) | macOS ツール、Obsidian、プロジェクト一覧と main の一括更新 |
 | [wsl](wsl/) | Windows / Ubuntu ツール · [ガイド（中国語）](notes/wsl-guide.md) |
-| [setup](setup/) | `cnotes`、`projects`、`projects-pull` のインストール |
+| [setup](setup/) | シェルコマンドと Zed のタスク・キーバインドのインストール |
 | [git](git/) | Git と SSH |
 | [claude](claude/) | Claude Code のインストールと設定 |
 | [pi](pi/) | Pi のモデル・推論設定と上書き・差分更新 |

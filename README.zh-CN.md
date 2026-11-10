@@ -15,7 +15,7 @@ git clone https://github.com/yuukiLike/warp-commands.git
 1. 在 Warp Drive → 个人空间 **+ → Import** 中选择需要的 YAML 或命令目录，别导入整个仓库。
 2. 搜索命令、填写参数、运行。执行环境见各工作流说明。
 
-导入的是副本，仓库更新后需同步更新。`cnotes`、`projects`、`projects-pull` 的安装与更新见 [setup](setup/)。
+导入的是副本，仓库更新后需同步更新。`cnotes`、`projects`、`projects-pull` 及 Zed 任务与快捷键的安装和更新见 [setup](setup/)。
 
 [导入示意图](assets/warp-import.png) · [本地 YAML 用法](https://docs.warp.dev/terminal/entry/yaml-workflows)
 
@@ -25,7 +25,7 @@ git clone https://github.com/yuukiLike/warp-commands.git
 | --- | --- |
 | [mac](mac/) | macOS 工具、Obsidian、项目概览与批量更新 main |
 | [wsl](wsl/) | Windows / Ubuntu 工具 · [指南](notes/wsl-guide.md) |
-| [setup](setup/) | 安装 `cnotes`、`projects`、`projects-pull` |
+| [setup](setup/) | 安装 Shell 命令及 Zed 任务与快捷键 |
 | [git](git/) | Git 与 SSH |
 | [claude](claude/) | Claude Code 安装与配置 |
 | [pi](pi/) | Pi 常用模型、思考级别与覆盖／增量配置 |

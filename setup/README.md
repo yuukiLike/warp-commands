@@ -1,12 +1,12 @@
 # 在 Warp 中安装，之后直接使用
 
-这里的 YAML 是**安装工作流**。在每台 Mac 的 Warp 中运行一次，之后直接输入短命令。
+这里的 YAML 是**安装工作流**，用于安装常用 Shell 命令或应用配置。在每台 Mac 的 Warp 中运行对应工作流，之后按下表使用。
 
 ## 从 Warp 安装
 
-1. 在 Warp Drive → 个人空间 **+ → Import** 中，按需选择本目录的 `install-obsidian.yaml`、`install-projects.yaml` 或 `install-projects-pull.yaml`。`README.md` 是说明文档，不需要导入。
+1. 在 Warp Drive → 个人空间 **+ → Import** 中，按需选择下表对应的 YAML。`README.md` 是说明文档，不需要导入。
 2. 在 Warp 的工作流搜索中搜索下面的安装名称，选择并执行。
-3. 看到安装成功提示后，当前终端立即可用，新开的终端也会自动加载。
+3. 看到安装成功提示后，使用下表中的命令或快捷键。Shell 短命令在当前终端立即可用，新开的终端也会自动加载。
 
 文件名以 `install-` 开头：Warp 搜索按命中位置排序，越靠前排名越高。这样输入 `obsidian`、`projects` 时，命令文件（如 `mac/obsidian.yaml`）排在安装文件之前，两者不会互相抢位；想找安装文件时搜索 `install` 或 `setup`。
 
@@ -15,19 +15,26 @@
 | [`setup obsidian`](install-obsidian.yaml) | Obsidian 笔记库入口 | `cnotes` |
 | [`setup projects`](install-projects.yaml) | eza 与项目概览命令 | `projects` |
 | [`setup projects pull`](install-projects-pull.yaml) | 批量更新各项目的本地 `main` | `projects-pull` |
+| [`setup zed`](install-zed.yaml) | Zed 通用任务与快捷键，当前提供 HTML 浏览器任务 | 在 Zed 的 HTML 文件中按 `⌘⌃B` |
 
 这些工作流可以独立安装，不需要填写仓库路径或切换到源码目录。`setup projects` 先检测 `eza`：已有时提示跳过；缺少时先显示将执行 `brew install eza`，再通过 Homebrew 安装。如果 `brew` 也没有，会提示先安装 Homebrew 并停止。依赖安装方式参考 [eza 官方说明](https://eza.rocks/#installation)。`setup projects pull` 只需要 Git 和 Zsh，不依赖 `eza` 或 `projects`。
 
-## 命令保存在什么位置
+`setup zed` 使用已安装的 Node.js 和 macOS 自带的 `plutil`，将内置配置写入 Zed，无需下载脚本。
+
+安装器按工具集中维护通用配置。项目的 `dev`、`check`、`test`、`build` 等命令由各项目的 `package.json` 定义，项目专用的 Zed 入口放在该项目的 `.zed/` 中。
+
+## 命令和配置保存在什么位置
 
 | 文件 | 内容 |
 | --- | --- |
 | `~/.config/warp-commands/obsidian.zsh` | `cnotes` 的函数定义 |
 | `~/.config/warp-commands/projects.zsh` | `projects` 的函数定义 |
 | `~/.config/warp-commands/projects-pull.zsh` | `projects-pull` 的函数定义 |
-| `~/.zshrc` | 每个工具一行 `source`，让新终端加载函数 |
+| `~/.zshrc` | 每个 Shell 工具一行 `source`，让新终端加载函数 |
+| `~/.config/zed/tasks.json` | Zed 全局任务 |
+| `~/.config/zed/keymap.json` | Zed 用户快捷键 |
 
-设置了 `ZDOTDIR` 时，加载行写入该目录下的 `.zshrc`。已有配置会保留；再次执行安装工作流会更新本工具的命令文件，不会重复添加相同的加载行。
+Shell 工具设置了 `ZDOTDIR` 时，加载行写入该目录下的 `.zshrc`。已有配置会保留；再次执行安装工作流会更新本工具的命令文件，不会重复添加相同的加载行。
 
 ## 日常使用
 
@@ -43,6 +50,25 @@
 `cnotes` 使用每台 Mac 自己的 `$HOME`。先在该 Mac 开启 iCloud Drive，并确认 `iCloud 云盘 → Obsidian` 下已经同步好对应笔记库。
 
 `projects` 排除 `node_modules`，支持目录名中的空格，并遵循 `NO_COLOR` 设置。安装后，也可以通过 [projects 工作流](../mac/projects.yaml) 填写目录并调用。
+
+## Zed 通用配置
+
+导入并运行 [`setup zed`](install-zed.yaml)，安装 `Open HTML in Browser` 任务及 **Command + Control + B** 快捷键。任务先保存当前文件，再使用 macOS 的 `open` 打开 HTML，终端面板不弹出；快捷键只在 `.html`、`.htm` 编辑器中生效。
+
+使用前，在 Zed 按 **Command + O** 打开 HTML 所在的**文件夹**，再进入 HTML 文件。部分 Zed 版本在仅打开单文件时无法提供 `$ZED_FILE`，任务不会出现。
+
+安装过程会：
+
+- 按 `label` 更新同名任务，保留其他任务与快捷键。
+- 在配置不存在时创建文件；两份配置均校验通过后才写入，格式错误时停止。
+- 将有修改的文件整理为标准 JSON，并将含注释的原文件备份到配置目录中的 `.warp-html-*` 文件夹。备份文件名为 `tasks.json.before` / `keymap.json.before`，运行结果会显示路径。
+- 在配置已一致时跳过写入，不重复添加配置或备份。
+
+`open` 遵循 HTML 文件的默认应用关联。若 HTML 默认由编辑器打开，可将 YAML 中 `task.args` 改成 `["-a", "Google Chrome", "$ZED_FILE"]` 后重新分发。页面自动刷新需另外使用 Live Server。
+
+使用自定义 Zed 配置目录时，执行前设置 `WARP_ZED_CONFIG_DIR`；它只决定安装器的写入位置，不改变 Zed 的启动配置。
+
+运行 `ruby tests/zed_setup_test.rb` 可在临时目录验证安装、JSONC 合并、重复执行及写入失败后的回退，不修改本机 Zed 配置。参考：[Zed Tasks](https://zed.dev/docs/tasks)、[Zed 快捷键](https://zed.dev/docs/key-bindings)。
 
 ## 批量更新 main
 
@@ -74,15 +100,15 @@
 
 ## 多台 Mac 与更新
 
-每台 Mac 获得同一份安装工作流后，在自己的 Warp 中运行一次。工作流使用当前用户的 `$HOME`，安装位置不依赖仓库放在哪里。
+将安装工作流导入 Warp Drive 的个人空间后，其他 Mac 登录同一账号、联网获取工作流，再在每台 Mac 上运行一次。安装位置不依赖仓库放在哪里。
 
-仓库里的 YAML 是源文件，Warp 导入的是副本。修改 YAML 后，先更新 Warp 中的对应工作流，再在各台 Mac 上重新执行安装，新的命令定义才会写入该机器。
+仓库里的 YAML 是源文件，Warp 导入的是副本。修改 YAML 后，先更新 Warp 中的对应工作流，再在各台 Mac 上重新执行安装，新的命令定义或应用配置才会写入该机器。Warp Drive 同步工作流内容；Zed 本地配置的修改不会自动回写到工作流或仓库。参见 [Warp Drive 同步机制](https://docs.warp.dev/knowledge-and-collaboration/warp-drive/)。
 
-卸载某个快捷命令时，从 `.zshrc` 删除该工具的 `# Warp Commands:` 注释及下一行 `source`，然后新开终端。`eza` 软件仍保留。
+卸载某个 Shell 快捷命令时，从 `.zshrc` 删除该工具的 `# Warp Commands:` 注释及下一行 `source`，然后新开终端。`eza` 软件仍保留。
 
 ## 如何阅读与修改代码
 
-每个安装工作流完整保存在一个 YAML 中，`command` 按编号从上到下执行：
+每个安装工作流完整保存在一个 YAML 中。Shell 快捷命令安装器的 `command` 按编号从上到下执行：
 
 1. **检查配置与依赖**：先处理无法写入配置、找不到 eza 等情况。
 2. **保存日常命令**：`<<'ZSH'` 与下一行独立的 `ZSH` 之间，是将来运行的函数定义。这里的 `$HOME` 和参数会保留到调用函数时再展开。

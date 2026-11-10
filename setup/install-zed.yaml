@@ -1,0 +1,109 @@
+---
+name: "setup zed"
+command: |-
+  node <<'NODE'
+  const fs = require("node:fs");
+  const os = require("node:os");
+  const path = require("node:path");
+  const { spawnSync } = require("node:child_process");
+  const { isDeepStrictEqual } = require("node:util");
+
+  // 这两项是跨 Mac 分发的配置；更新后重新导入 Warp Drive 并执行。
+  const task = {
+    label: "Open HTML in Browser",
+    command: "open",
+    args: ["$ZED_FILE"],
+    save: "current",
+    reveal: "never",
+    hide: "on_success"
+  };
+  const context = "Editor && (extension == html || extension == htm)";
+  const shortcut = "cmd-ctrl-b";
+  const action = ["task::Spawn", { task_name: task.label }];
+  const directory = path.resolve(process.env.WARP_ZED_CONFIG_DIR || path.join(os.homedir(), ".config", "zed"));
+  const isObject = value => value !== null && typeof value === "object" && !Array.isArray(value);
+
+  function readConfig(name) {
+    const file = path.join(directory, name);
+    const stat = fs.lstatSync(file, { throwIfNoEntry: false });
+    if (stat && !stat.isFile()) throw new Error("配置必须是普通文件，不能是符号链接：" + file);
+    const original = stat ? fs.readFileSync(file, "utf8") : null;
+    // plutil 是 macOS 自带工具，支持 Zed 的 JSONC 注释和末尾逗号。
+    const parsed = spawnSync("/usr/bin/plutil", ["-convert", "json", "-o", "-", "-"], {
+      input: original === null ? "[]" : original,
+      encoding: "utf8"
+    });
+    if (parsed.error || parsed.status !== 0) throw new Error(name + " 无法解析；未修改配置，请先修复 JSONC 格式。");
+    const value = JSON.parse(parsed.stdout);
+    if (!Array.isArray(value) || !value.every(isObject)) throw new Error(name + " 必须是对象数组；未修改配置。");
+    return { name, file, original, value, mode: stat ? stat.mode & 0o777 : 0o600 };
+  }
+
+  try {
+    if (process.platform !== "darwin") throw new Error("此工作流适用于 macOS，需要 Node.js 和系统自带的 plutil。");
+    const directoryStat = fs.lstatSync(directory, { throwIfNoEntry: false });
+    if (directoryStat && !directoryStat.isDirectory()) throw new Error("配置目录不能是文件或符号链接：" + directory);
+
+    // 两个文件都通过校验后再写入，保留其他任务与快捷键。
+    const tasks = readConfig("tasks.json");
+    const keymap = readConfig("keymap.json");
+    for (const group of keymap.value) {
+      for (const field of ["bindings", "unbind"]) {
+        if (group[field] !== undefined && !isObject(group[field])) throw new Error("keymap.json 的 " + field + " 必须是对象；未修改配置。");
+      }
+    }
+    tasks.next = tasks.value.filter(item => item.label !== task.label).concat(task);
+    keymap.next = JSON.parse(JSON.stringify(keymap.value));
+    let groupIndex = -1;
+    keymap.next.forEach((group, index) => { if (group.context === context) groupIndex = index; });
+    const group = groupIndex < 0 ? { context } : keymap.next.splice(groupIndex, 1)[0];
+    group.bindings = { ...group.bindings, [shortcut]: action };
+    if (group.unbind) delete group.unbind[shortcut];
+    keymap.next.push(group);
+
+    const changes = [tasks, keymap].filter(item => !isDeepStrictEqual(item.value, item.next));
+    if (changes.length === 0) {
+      console.log("配置已是最新：在 HTML 文件中按 Command + Control + B。");
+    } else {
+      fs.mkdirSync(directory, { recursive: true });
+      const backup = fs.mkdtempSync(path.join(directory, ".warp-html-"));
+      const written = [];
+      try {
+        for (const item of changes) {
+          if (item.original !== null) fs.writeFileSync(path.join(backup, item.name + ".before"), item.original, { mode: item.mode });
+          fs.writeFileSync(path.join(backup, item.name + ".next"), JSON.stringify(item.next, null, 2) + "\n", { mode: item.mode });
+        }
+        // 如果准备期间配置被修改，停止写入，避免覆盖编辑器刚保存的内容。
+        for (const item of changes) {
+          const current = fs.lstatSync(item.file, { throwIfNoEntry: false });
+          if ((current && !current.isFile()) ||
+              (current ? fs.readFileSync(item.file, "utf8") : null) !== item.original) {
+            throw new Error(item.name + " 在准备期间发生变化，请重试。");
+          }
+        }
+        for (const item of changes) {
+          fs.renameSync(path.join(backup, item.name + ".next"), item.file);
+          written.push(item);
+        }
+      } catch (error) {
+        for (const item of written.reverse()) {
+          if (item.original === null) fs.unlinkSync(item.file);
+          else fs.renameSync(path.join(backup, item.name + ".before"), item.file);
+        }
+        fs.rmSync(backup, { recursive: true, force: true });
+        throw error;
+      }
+      console.log("已配置 HTML 浏览器任务与 Command + Control + B。");
+      if (changes.some(item => item.original !== null)) console.log("原文件备份：" + backup);
+      else fs.rmdirSync(backup);
+    }
+  } catch (error) {
+    console.error(error.message);
+    process.exitCode = 1;
+  }
+  NODE
+description: "安装或更新 Zed 通用任务与快捷键，当前提供 HTML 浏览器任务和 Command + Control + B。保留其他配置，同名任务更新，重复执行不重复添加；有改动时本地备份原文件。适用于 macOS，需要 Node.js。配置内置，导入 Warp Drive 后在每台 Mac 运行一次生效。"
+arguments: []
+tags: ["zed", "html", "browser", "tasks", "keymap", "sync", "macos"]
+source_url: "https://zed.dev/docs/tasks"
+shells: ["bash", "zsh"]

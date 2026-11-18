@@ -1,7 +1,7 @@
 ---
-name: "pi models"
+name: "pi model search"
 command: 'pi --list-models "{{filter}}"'
-description: "按供应商或模型关键词查看 Pi 模型目录。目录条目不代表当前账号已有调用权限；精简日常列表用 /scoped-models 或 settings.json 的 enabledModels。"
+description: "按供应商或模型关键词搜索 Pi 当前能列出的模型，不受常用模型列表限制。搜索结果不代表账号一定有调用权限。"
 arguments:
   - name: "filter"
     arg_type: "Text"

@@ -1,0 +1,150 @@
+import { spawnSync } from "node:child_process";
+import {
+  chmodSync, linkSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync,
+} from "node:fs";
+import { homedir } from "node:os";
+import { dirname, join, resolve } from "node:path";
+import { fileURLToPath } from "node:url";
+
+const template = join(homedir(), ".config", "warp-commands", "pi", "settings.template.json");
+const defaultThinking = "max";
+const thinkingLevels = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
+const thinkingSuffix = new RegExp(`:(?:${thinkingLevels.join("|")})$`);
+
+function agentDirectory() {
+  const override = process.env.PI_CODING_AGENT_DIR;
+  const home = homedir();
+  if (!override) return join(home, ".pi", "agent");
+  if (override === "~") return home;
+  if (override.startsWith("~/")) return resolve(join(home, override.slice(2)));
+  return resolve(override.startsWith("file://") ? fileURLToPath(override) : override);
+}
+
+function isObject(value) {
+  return value !== null && typeof value === "object" && !Array.isArray(value);
+}
+
+function readJsonObject(file) {
+  const content = readFileSync(file, "utf8").replace(/^\uFEFF/, "");
+  let value;
+  try {
+    value = JSON.parse(content);
+  } catch {
+    throw new Error(`${file} 不是有效的 JSON。`);
+  }
+  if (!isObject(value)) throw new Error(`${file} 必须是 JSON 对象。`);
+  return value;
+}
+
+function isModelId(value) {
+  return typeof value === "string" && /^[\w-]+\/[^\s*?[\]]+$/.test(value) && !thinkingSuffix.test(value);
+}
+
+function readTemplate(seed) {
+  try {
+    return readJsonObject(template);
+  } catch (error) {
+    if (error.code !== "ENOENT") throw error;
+  }
+  try {
+    writeJson(template, seed, { createOnly: true });
+  } catch (error) {
+    if (error.code !== "EEXIST") throw error;
+  }
+  return readJsonObject(template);
+}
+
+function readPreset(seed) {
+  const { defaultModel, enabledModels } = readTemplate(seed);
+  if (!isModelId(defaultModel) || !Array.isArray(enabledModels) || !enabledModels.every(isModelId)) {
+    throw new Error(`${template} 的 defaultModel 和 enabledModels 必须使用精确的 provider/model ID，不带通配符或思考级别。`);
+  }
+  return { defaultModel, enabledModels: [...new Set([defaultModel, ...enabledModels])] };
+}
+
+function mergePreset(current, preset) {
+  const { enabledModels = [], modelThinkingLevels } = current;
+  if (!Array.isArray(enabledModels) || enabledModels.some(id => typeof id !== "string")) {
+    throw new Error("现有 settings.json 的 enabledModels 必须是字符串数组。");
+  }
+  if (modelThinkingLevels !== undefined && !isObject(modelThinkingLevels)) {
+    throw new Error("现有 settings.json 的 modelThinkingLevels 必须是对象。");
+  }
+
+  const presetIds = new Set(preset.enabledModels.map(id => id.toLowerCase()));
+  const otherPatterns = enabledModels.filter(pattern => !presetIds.has(pattern.replace(thinkingSuffix, "").toLowerCase()));
+  // Pi uses the first matching scope entry. Exact preset entries must win over old globs.
+  const merged = { ...current, ...preset, enabledModels: [...new Set([...preset.enabledModels, ...otherPatterns])] };
+  for (const id of Object.keys(modelThinkingLevels ?? {})) {
+    if (presetIds.has(id.toLowerCase())) merged.modelThinkingLevels[id] = defaultThinking;
+  }
+  return merged;
+}
+
+function writeJson(file, value, { createOnly = false, mode } = {}) {
+  const dir = dirname(file);
+  mkdirSync(dir, { recursive: true });
+  const temporaryDir = mkdtempSync(join(dir, ".pi-write-"));
+  const temporaryFile = join(temporaryDir, "content.json");
+  try {
+    writeFileSync(temporaryFile, JSON.stringify(value, null, 2) + "\n", { mode: 0o600 });
+    if (mode !== undefined) chmodSync(temporaryFile, mode & 0o777);
+    // A hard link publishes the initialized template without replacing an existing one.
+    if (createOnly) linkSync(temporaryFile, file);
+    else renameSync(temporaryFile, file);
+  } finally {
+    rmSync(temporaryDir, { recursive: true, force: true });
+  }
+}
+
+function writeSettings(action, seed) {
+  const { defaultModel: modelRef, enabledModels } = readPreset(seed);
+  const separator = modelRef.indexOf("/");
+  const preset = {
+    defaultProvider: modelRef.slice(0, separator),
+    defaultModel: modelRef.slice(separator + 1),
+    defaultThinkingLevel: defaultThinking,
+    enabledModels,
+  };
+  const dir = agentDirectory();
+  const file = join(dir, "settings.json");
+  if (lstatSync(dir, { throwIfNoEntry: false })?.isSymbolicLink()) {
+    throw new Error(`拒绝写入符号链接：${dir}`);
+  }
+  const fileStat = lstatSync(file, { throwIfNoEntry: false });
+  if (fileStat?.isSymbolicLink()) throw new Error(`拒绝写入符号链接：${file}`);
+  if (fileStat && !fileStat.isFile()) throw new Error(`不是普通文件：${file}`);
+  const settings = action === "merge" && fileStat ? mergePreset(readJsonObject(file), preset) : preset;
+  writeJson(file, settings, { mode: fileStat?.mode });
+  console.log(`已${action === "merge" ? "合并" : "覆盖"}：${file}；默认 ${modelRef} + ${defaultThinking}。`);
+}
+
+function runInteractive(command, args) {
+  const result = spawnSync(command, args, { stdio: "inherit" });
+  if (result.error) throw result.error;
+  if (result.signal) process.kill(process.pid, result.signal);
+  else process.exitCode = result.status;
+}
+
+function editSettings() {
+  const dir = agentDirectory();
+  mkdirSync(dir, { recursive: true });
+  runInteractive("vi", [join(dir, "settings.json")]);
+}
+
+function startModel([modelArg, thinkingArg], seed) {
+  const selection = modelArg?.trim() || "preset";
+  const thinking = thinkingArg?.trim() || defaultThinking;
+  if (!thinkingLevels.includes(thinking)) throw new Error(`无效的思考级别：${thinking}`);
+  const model = selection === "preset" ? readPreset(seed).defaultModel : selection;
+  runInteractive("pi", ["--model", model, "--thinking", thinking]);
+}
+
+function run(command) {
+  try {
+    command();
+  } catch (error) {
+    console.error(`pi: ${error.message}`);
+    process.exitCode = 1;
+  }
+}

@@ -11,23 +11,29 @@ require 'yaml'
 class PiSettingsTest < Minitest::Test
   ROOT = File.expand_path('..', __dir__)
   WORKFLOWS = %w[overwrite merge].to_h do |mode|
-    [mode, YAML.load_file(File.join(ROOT, "pi/pi-settings-#{mode}.yaml"))]
+    [mode, YAML.load_file(File.join(ROOT, "pi/pi-#{mode}.yaml"))]
   end
   PRESET_PATH = File.join(ROOT, 'pi/settings.template.json')
   PRESET = JSON.parse(File.read(PRESET_PATH))
   DEFAULT_REF = PRESET.fetch('defaultModel')
-  TEMPLATE = {
-    'defaultProvider' => DEFAULT_REF.split('/', 2).first,
-    'defaultModel' => DEFAULT_REF.split('/', 2).last,
-    'defaultThinkingLevel' => 'max',
-    'enabledModels' => [DEFAULT_REF, *PRESET.fetch('enabledModels')].uniq
-  }.freeze
+  ASTRA_REF = 'openai/gpt-6.2-astra'
 
   def setup
-    @temporary = Dir.mktmpdir('pi-settings-test-')
+    @temporary = File.realpath(Dir.mktmpdir('pi-settings-test-'))
     @home = File.join(@temporary, 'home')
-    @preset = File.join(@home, '.config/warp-commands/pi/settings.template.json')
-    FileUtils.mkdir_p(@home)
+    @repository = File.join(@home, 'codex/warp-commands')
+    FileUtils.mkdir_p(@repository)
+    FileUtils.cp_r(File.join(ROOT, 'pi'), @repository)
+    @preset = File.join(@repository, 'pi/settings.template.json')
+    @extension = File.join(@repository, 'pi/preset.mjs')
+    @settings = {
+      'defaultProvider' => DEFAULT_REF.split('/', 2).first,
+      'defaultModel' => DEFAULT_REF.split('/', 2).last,
+      'defaultThinkingLevel' => PRESET.fetch('defaultThinkingLevel'),
+      'modelThinkingLevels' => PRESET.fetch('modelThinkingLevels'),
+      'enabledModels' => [DEFAULT_REF, *PRESET.fetch('enabledModels')].uniq,
+      'extensions' => [@extension]
+    }
     @environment = { 'HOME' => @home, 'PATH' => ENV.fetch('PATH') }
   end
 
@@ -35,48 +41,37 @@ class PiSettingsTest < Minitest::Test
     FileUtils.remove_entry(@temporary)
   end
 
-  def test_generated_workflows_are_up_to_date
-    assert_equal %w[defaultModel enabledModels], PRESET.keys.sort
-    refute_includes PRESET.fetch('enabledModels'), DEFAULT_REF
-    stdout, stderr, status = Open3.capture3('node', File.join(ROOT, 'pi/build-workflows.mjs'), '--check')
-    assert status.success?, stdout + stderr
-  end
-
-  def test_generator_preserves_metadata_below_the_command_in_any_order
-    pi_directory = File.join(@temporary, 'pi')
-    FileUtils.cp_r(File.join(ROOT, 'pi'), pi_directory)
-    workflow_path = File.join(pi_directory, 'pi-settings-merge.yaml')
-    original = File.read(workflow_path)
-    description = original.lines.find { |line| line.start_with?('description:') }
-    comment = "# kept metadata comment\n"
-    File.write(workflow_path, original.sub(description, comment) + description)
-    File.write(File.join(pi_directory, 'settings.template.json'), JSON.generate(PRESET.merge('defaultModel' => 'openai/new-model')))
-
-    stdout, stderr, status = Open3.capture3('node', File.join(pi_directory, 'build-workflows.mjs'))
-    assert status.success?, stdout + stderr
-    generated = YAML.load_file(workflow_path)
-    assert_includes generated.delete('command'), 'openai/new-model'
-    assert_equal YAML.safe_load(original).reject { |key, _| key == 'command' }, generated
-    assert_includes File.read(workflow_path), comment
-  end
-
-  def test_first_preset_start_works_without_setup_and_seeds_the_local_template
+  def test_first_preset_start_uses_the_repository_without_seeding_user_files
     stub_command('pi')
-    refute File.exist?(@preset)
-    stdout, stderr, status = run_named_workflow('model-start', 'zsh', model: 'preset', thinking: 'max')
+    stdout, stderr, status = run_named_workflow('start', 'zsh')
     assert status.success?, stderr
-    assert_equal ['--model', DEFAULT_REF, '--thinking', 'max'], stdout.lines.map(&:chomp)
+    assert_equal ['--model', 'openai/gpt-6.2-sol', '--thinking', 'max', '--extension', @extension], stdout.lines.map(&:chomp)
+    refute_includes PRESET.fetch('enabledModels'), DEFAULT_REF
     assert_equal PRESET, JSON.parse(File.read(@preset))
     refute File.exist?(File.join(@home, '.pi'))
+    refute File.exist?(File.join(@home, '.config'))
   end
 
-  def test_workflows_read_the_current_preset_from_another_working_directory
-    FileUtils.mkdir_p(File.dirname(@preset))
-    custom = JSON.generate(defaultModel: 'different/next-model', enabledModels: ['different/other-model'])
-    File.write(@preset, custom)
+  def test_workflows_read_live_edits_from_a_custom_repository_path
+    repo = File.join(@temporary, 'custom checkout')
+    FileUtils.mv(@repository, repo)
+    @environment['WARP_COMMANDS_DIR'] = repo
+    preset = File.join(repo, 'pi/settings.template.json')
+    extension = File.join(repo, 'pi/preset.mjs')
+    legacy_preset = File.join(@home, '.config/warp-commands/pi/settings.template.json')
+    FileUtils.mkdir_p(File.dirname(legacy_preset))
+    File.write(legacy_preset, JSON.generate(PRESET))
+
+    stub_command('pi')
+    stdout, stderr, status = run_named_workflow('start', 'zsh')
+    assert status.success?, stderr
+    assert_equal ['--model', DEFAULT_REF, '--thinking', 'max', '--extension', extension], stdout.lines.map(&:chomp)
+
+    custom = JSON.generate(defaultModel: 'different/next-model', defaultThinkingLevel: 'medium', enabledModels: ['different/other-model'])
+    File.write(preset, custom)
     expected = {
-      'defaultProvider' => 'different', 'defaultModel' => 'next-model', 'defaultThinkingLevel' => 'max',
-      'enabledModels' => ['different/next-model', 'different/other-model']
+      'defaultProvider' => 'different', 'defaultModel' => 'next-model', 'defaultThinkingLevel' => 'medium',
+      'enabledModels' => ['different/next-model', 'different/other-model'], 'extensions' => [extension]
     }
     WORKFLOWS.each_key do |mode|
       directory = File.join(@home, mode)
@@ -84,28 +79,43 @@ class PiSettingsTest < Minitest::Test
       assert status.success?, stdout + stderr
       assert_equal expected, JSON.parse(File.read(File.join(directory, 'settings.json')))
     end
-    stub_command('pi')
-    stdout, stderr, status = run_named_workflow('model-start', 'zsh', model: 'preset', thinking: 'max')
+    stdout, stderr, status = run_named_workflow('start', 'zsh')
     assert status.success?, stderr
-    assert_equal %w[--model different/next-model --thinking max], stdout.lines.map(&:chomp)
-    stdout, stderr, status = run_named_workflow('model-start', 'bash', model: 'different/explicit', thinking: 'low')
+    assert_equal ['--model', 'different/next-model', '--thinking', 'medium', '--extension', extension], stdout.lines.map(&:chomp)
+    stdout, stderr, status = run_named_workflow('start', 'bash', model: 'different/explicit', thinking: 'low')
     assert status.success?, stderr
-    assert_equal %w[--model different/explicit --thinking low], stdout.lines.map(&:chomp)
+    assert_equal ['--model', 'different/explicit', '--thinking', 'low', '--extension', extension], stdout.lines.map(&:chomp)
     refute File.exist?(File.join(@home, '.pi'))
-    assert_equal custom, File.read(@preset)
+    assert_equal custom, File.read(preset)
+    assert_equal PRESET, JSON.parse(File.read(legacy_preset))
   end
 
-  def test_both_workflows_create_the_template_and_are_idempotent
+  def test_both_writers_are_idempotent_without_creating_a_template_copy
     %w[bash zsh].product(WORKFLOWS.keys).each do |shell, mode|
       directory = File.join(@temporary, "#{shell} #{mode}")
       environment = { 'PI_CODING_AGENT_DIR' => directory }
       2.times do
         stdout, stderr, status = run_workflow(mode, shell, environment)
         assert status.success?, stdout + stderr
-        assert_equal TEMPLATE, JSON.parse(File.read(File.join(directory, 'settings.json')))
+        assert_equal @settings, JSON.parse(File.read(File.join(directory, 'settings.json')))
         assert_equal ['settings.json'], Dir.children(directory), 'must not create backups or other files'
       end
     end
+    refute File.exist?(File.join(@home, '.config'))
+  end
+
+  def test_start_prefers_astras_default_over_the_global_level
+    stub_command('pi')
+    assert_equal 'max', PRESET.fetch('modelThinkingLevels').fetch(ASTRA_REF)
+    File.write(@preset, JSON.generate(PRESET.merge('defaultThinkingLevel' => 'medium')))
+
+    stdout, stderr, status = run_named_workflow('start', 'zsh', model: ASTRA_REF)
+    assert status.success?, stderr
+    assert_equal ['--model', ASTRA_REF, '--thinking', 'max', '--extension', @extension], stdout.lines.map(&:chomp)
+
+    stdout, stderr, status = run_named_workflow('start', 'bash', model: ASTRA_REF, thinking: 'low')
+    assert status.success?, stderr
+    assert_equal ['--model', ASTRA_REF, '--thinking', 'low', '--extension', @extension], stdout.lines.map(&:chomp)
   end
 
   def test_overwrite_replaces_old_settings_without_backup
@@ -117,7 +127,7 @@ class PiSettingsTest < Minitest::Test
         File.write(file, original)
         stdout, stderr, status = run_workflow('overwrite', shell, 'PI_CODING_AGENT_DIR' => directory)
         assert status.success?, stdout + stderr
-        assert_equal TEMPLATE, JSON.parse(File.read(file))
+        assert_equal @settings, JSON.parse(File.read(file))
         assert_equal ['settings.json'], Dir.children(directory)
       end
     end
@@ -135,14 +145,15 @@ class PiSettingsTest < Minitest::Test
         'defaultThinkingLevel' => 'high',
         'enabledModels' => ['other/example', 'openai/*:low', "#{DEFAULT_REF}:low", 'other/second', 'other/example'],
         'modelThinkingLevels' => {
-          DEFAULT_REF => 'low', TEMPLATE.fetch('enabledModels').last => 'high', 'other/example' => 'medium'
+          DEFAULT_REF => 'low', ASTRA_REF => 'low', @settings.fetch('enabledModels').last => 'high', 'other/example' => 'medium'
         }
       }
       File.write(file, JSON.generate(original))
-      expected = original.merge(TEMPLATE).merge(
-        'enabledModels' => TEMPLATE.fetch('enabledModels') + ['other/example', 'openai/*:low', 'other/second'],
+      expected = original.merge(@settings).merge(
+        'enabledModels' => @settings.fetch('enabledModels') + ['other/example', 'openai/*:low', 'other/second'],
+        'extensions' => ['local.ts', @extension],
         'modelThinkingLevels' => {
-          DEFAULT_REF => 'max', TEMPLATE.fetch('enabledModels').last => 'max', 'other/example' => 'medium'
+          DEFAULT_REF => 'max', ASTRA_REF => 'max', @settings.fetch('enabledModels').last => 'max', 'other/example' => 'medium'
         }
       )
       2.times do
@@ -163,9 +174,9 @@ class PiSettingsTest < Minitest::Test
       project = File.join(home, '.pi/settings.json')
       File.write(project, '{"theme":"light"}')
 
-      stdout, stderr, status = run_workflow(mode, shell, 'HOME' => home)
+      stdout, stderr, status = run_workflow(mode, shell, 'HOME' => home, 'WARP_COMMANDS_DIR' => @repository)
       assert status.success?, stdout + stderr
-      assert_equal TEMPLATE, JSON.parse(File.read(File.join(directory, 'settings.json')))
+      assert_equal @settings, JSON.parse(File.read(File.join(directory, 'settings.json')))
       %w[auth.json models.json].each { |name| assert_equal "keep #{name}", File.read(File.join(directory, name)) }
       assert_equal '{"theme":"light"}', File.read(project)
       assert_equal %w[auth.json models.json settings.json], Dir.children(directory).sort
@@ -176,7 +187,8 @@ class PiSettingsTest < Minitest::Test
     invalid = [
       '{', 'null', '[]', 'true', '"text"',
       '{"enabledModels":null}', '{"enabledModels":"openai/*"}', '{"enabledModels":[1]}',
-      '{"modelThinkingLevels":null}', '{"modelThinkingLevels":[]}', '{"modelThinkingLevels":"high"}'
+      '{"modelThinkingLevels":null}', '{"modelThinkingLevels":[]}', '{"modelThinkingLevels":"high"}',
+      '{"extensions":null}', '{"extensions":"single.ts"}', '{"extensions":[1]}'
     ]
     %w[bash zsh].each do |shell|
       directory = File.join(@temporary, shell)
@@ -217,17 +229,18 @@ class PiSettingsTest < Minitest::Test
     end
   end
 
-  def test_quoted_home_override_is_expanded_for_all_settings_commands
+  def test_edit_opens_the_template_and_writers_expand_the_quoted_home_override
     stub_command('vi')
     environment = { 'PI_CODING_AGENT_DIR' => '~/custom agent' }
     file = File.join(@home, 'custom agent/settings.json')
-    stdout, stderr, status = run_named_workflow('settings-edit', 'zsh', environment: environment)
+    stdout, stderr, status = run_named_workflow('model-edit', 'zsh', environment: environment)
     assert status.success?, stderr
-    assert_equal "#{file}\n", stdout
+    assert_equal "#{@preset}\n", stdout
+    refute File.exist?(File.dirname(file))
     WORKFLOWS.each_key do |mode|
       stdout, stderr, status = run_workflow(mode, 'bash', environment)
       assert status.success?, stdout + stderr
-      assert_equal TEMPLATE, JSON.parse(File.read(file))
+      assert_equal @settings, JSON.parse(File.read(file))
     end
     refute File.exist?(File.join(@home, '~'))
 
@@ -243,9 +256,14 @@ class PiSettingsTest < Minitest::Test
     file = File.join(directory, 'settings.json')
     original = '{"theme":"keep"}'
     File.write(file, original)
-    FileUtils.mkdir_p(File.dirname(@preset))
-    variants = ['{', '{}', '{"defaultModel":"openai/x","enabledModels":["openai/*"]}',
-                '{"defaultModel":"openai/x:low","enabledModels":[]}']
+    variants = [
+      '{', '{}', '{"defaultModel":"openai/x","enabledModels":["openai/*"]}',
+      '{"defaultModel":"openai/x:low","enabledModels":[]}',
+      JSON.generate(PRESET.merge('defaultThinkingLevel' => 'fast')),
+      JSON.generate(PRESET.merge('modelThinkingLevels' => { ASTRA_REF => 'ultrafast' })),
+      JSON.generate(PRESET.merge('serviceTiers' => { DEFAULT_REF => 'ultra fast' })),
+      JSON.generate(PRESET.merge('serviceTiers' => { 'deepseek/some-model' => 'ultrafast' }))
+    ]
     variants.each do |content|
       File.write(@preset, content)
       WORKFLOWS.each_key do |mode|
@@ -256,6 +274,28 @@ class PiSettingsTest < Minitest::Test
         assert_equal ['settings.json'], Dir.children(directory)
       end
     end
+  end
+
+  def test_service_tier_is_only_sent_for_the_configured_openai_responses_model
+    source = <<~JS
+      import assert from "node:assert/strict";
+      import { pathToFileURL } from "node:url";
+      const { default: register } = await import(pathToFileURL(process.argv[1]).href);
+      let beforeRequest;
+      register({ on(event, handler) {
+        assert.equal(event, "before_provider_request");
+        beforeRequest = handler;
+      } });
+      const model = { provider: "openai", id: "gpt-6.2-sol", api: "openai-responses" };
+      const payload = { model: model.id, reasoning: { effort: "max" } };
+      assert.deepEqual(beforeRequest({ payload }, { model }), { ...payload, service_tier: "ultrafast" });
+      assert.equal(payload.service_tier, undefined);
+      assert.equal(beforeRequest({ payload: { model: "gpt-6.1-sol" } }, { model: { ...model, id: "gpt-6.1-sol" } }), undefined);
+      assert.equal(beforeRequest({ payload }, { model: { ...model, provider: "openai-codex" } }), undefined);
+      assert.equal(beforeRequest({ payload }, { model: { ...model, api: "openai-completions" } }), undefined);
+    JS
+    stdout, stderr, status = Open3.capture3('node', '--input-type=module', '-e', source, @extension)
+    assert status.success?, stdout + stderr
   end
 
   def test_failed_replacement_preserves_old_file_and_cleans_up
@@ -282,7 +322,7 @@ class PiSettingsTest < Minitest::Test
   end
 
   def test_yaml_metadata_and_shell_syntax
-    expected_names = %w[model-start model-search model-catalog-refresh settings-edit settings-merge settings-overwrite]
+    expected_names = %w[start model-edit merge overwrite models refresh]
     assert_equal expected_names.sort, Dir[File.join(ROOT, 'pi/*.yaml')].map { |path| File.basename(path, '.yaml').delete_prefix('pi-') }.sort
     WORKFLOWS.each_value { |workflow| assert_equal [], workflow.fetch('arguments') }
     Dir[File.join(ROOT, 'pi/*.yaml')].each do |file|
@@ -305,8 +345,13 @@ class PiSettingsTest < Minitest::Test
   end
 
   def run_named_workflow(name, shell, environment: {}, **arguments)
-    command = YAML.load_file(File.join(ROOT, "pi/pi-#{name}.yaml")).fetch('command')
-    arguments.each { |key, value| command = command.gsub("{{#{key}}}", value) }
+    workflow = YAML.load_file(File.join(ROOT, "pi/pi-#{name}.yaml"))
+    command = workflow.fetch('command')
+    workflow.fetch('arguments').each do |argument|
+      key = argument.fetch('name')
+      value = arguments.fetch(key.to_sym, argument.fetch('default_value'))
+      command = command.gsub("{{#{key}}}") { value }
+    end
     run_command(command, shell, environment)
   end
 

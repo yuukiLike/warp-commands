@@ -1,7 +1,7 @@
 ---
-name: "pi model catalog refresh"
+name: "pi refresh"
 command: "pi update --models"
-description: "只刷新 Pi 的模型目录，不升级 Pi，也不更改默认模型或常用模型列表。"
+description: "刷新 Pi 模型目录。"
 arguments: []
 tags: ["pi", "models", "update"]
 source_url: "https://pi.dev/docs/latest/models"

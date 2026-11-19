@@ -1,0 +1,8 @@
+---
+name: "pi merge"
+command: 'node "${WARP_COMMANDS_DIR:-$HOME/codex/warp-commands}/pi/warp.mjs" merge'
+description: "将预设合并到 Pi 用户设置。"
+arguments: []
+tags: ["pi", "settings", "merge", "preset"]
+source_url: "https://pi.dev/docs/latest/settings"
+shells: ["bash", "zsh"]

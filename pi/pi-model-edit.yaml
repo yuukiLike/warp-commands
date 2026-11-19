@@ -1,0 +1,8 @@
+---
+name: "pi model edit"
+command: 'node "${WARP_COMMANDS_DIR:-$HOME/codex/warp-commands}/pi/warp.mjs" edit'
+description: "用 vi 编辑模型预设。"
+arguments: []
+tags: ["pi", "settings", "config", "models", "thinking"]
+source_url: "https://pi.dev/docs/latest/configuration"
+shells: ["bash", "zsh"]

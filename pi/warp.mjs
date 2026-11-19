@@ -1,111 +1,60 @@
 import { spawnSync } from "node:child_process";
 import {
-  chmodSync, linkSync, lstatSync, mkdirSync, mkdtempSync, readFileSync, renameSync, rmSync, writeFileSync,
+  chmodSync, lstatSync, mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync,
 } from "node:fs";
 import { homedir } from "node:os";
-import { dirname, join, resolve } from "node:path";
+import { join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
-
-const template = join(homedir(), ".config", "warp-commands", "pi", "settings.template.json");
-const defaultThinking = "max";
-const thinkingLevels = ["off", "minimal", "low", "medium", "high", "xhigh", "max"];
-const thinkingSuffix = new RegExp(`:(?:${thinkingLevels.join("|")})$`);
+import { extensionPath, isObject, readJsonObject, readPreset, templatePath, thinkingLevels, thinkingSuffix } from "./preset.mjs";
 
 function agentDirectory() {
-  const override = process.env.PI_CODING_AGENT_DIR;
-  const home = homedir();
-  if (!override) return join(home, ".pi", "agent");
-  if (override === "~") return home;
-  if (override.startsWith("~/")) return resolve(join(home, override.slice(2)));
-  return resolve(override.startsWith("file://") ? fileURLToPath(override) : override);
+  const dir = process.env.PI_CODING_AGENT_DIR || "~/.pi/agent";
+  if (dir.startsWith("file://")) return resolve(fileURLToPath(dir));
+  return resolve(dir.replace(/^~(?=\/|$)/, () => homedir()));
 }
 
-function isObject(value) {
-  return value !== null && typeof value === "object" && !Array.isArray(value);
+function isStringArray(value) {
+  return Array.isArray(value) && value.every(item => typeof item === "string");
 }
 
-function readJsonObject(file) {
-  const content = readFileSync(file, "utf8").replace(/^\uFEFF/, "");
-  let value;
-  try {
-    value = JSON.parse(content);
-  } catch {
-    throw new Error(`${file} 不是有效的 JSON。`);
-  }
-  if (!isObject(value)) throw new Error(`${file} 必须是 JSON 对象。`);
-  return value;
-}
-
-function isModelId(value) {
-  return typeof value === "string" && /^[\w-]+\/[^\s*?[\]]+$/.test(value) && !thinkingSuffix.test(value);
-}
-
-function readTemplate(seed) {
-  try {
-    return readJsonObject(template);
-  } catch (error) {
-    if (error.code !== "ENOENT") throw error;
-  }
-  try {
-    writeJson(template, seed, { createOnly: true });
-  } catch (error) {
-    if (error.code !== "EEXIST") throw error;
-  }
-  return readJsonObject(template);
-}
-
-function readPreset(seed) {
-  const { defaultModel, enabledModels } = readTemplate(seed);
-  if (!isModelId(defaultModel) || !Array.isArray(enabledModels) || !enabledModels.every(isModelId)) {
-    throw new Error(`${template} 的 defaultModel 和 enabledModels 必须使用精确的 provider/model ID，不带通配符或思考级别。`);
-  }
-  return { defaultModel, enabledModels: [...new Set([defaultModel, ...enabledModels])] };
-}
-
-function mergePreset(current, preset) {
-  const { enabledModels = [], modelThinkingLevels } = current;
-  if (!Array.isArray(enabledModels) || enabledModels.some(id => typeof id !== "string")) {
+function applyPreset(current, { defaultModel, defaultThinkingLevel, enabledModels, modelThinkingLevels }) {
+  const { enabledModels: currentModels = [], modelThinkingLevels: currentLevels = {}, extensions = [] } = current;
+  if (!isStringArray(currentModels)) {
     throw new Error("现有 settings.json 的 enabledModels 必须是字符串数组。");
   }
-  if (modelThinkingLevels !== undefined && !isObject(modelThinkingLevels)) {
+  if (!isObject(currentLevels)) {
     throw new Error("现有 settings.json 的 modelThinkingLevels 必须是对象。");
   }
-
-  const presetIds = new Set(preset.enabledModels.map(id => id.toLowerCase()));
-  const otherPatterns = enabledModels.filter(pattern => !presetIds.has(pattern.replace(thinkingSuffix, "").toLowerCase()));
-  // Pi uses the first matching scope entry. Exact preset entries must win over old globs.
-  const merged = { ...current, ...preset, enabledModels: [...new Set([...preset.enabledModels, ...otherPatterns])] };
-  for (const id of Object.keys(modelThinkingLevels ?? {})) {
-    if (presetIds.has(id.toLowerCase())) merged.modelThinkingLevels[id] = defaultThinking;
+  if (!isStringArray(extensions)) {
+    throw new Error("现有 settings.json 的 extensions 必须是字符串数组。");
   }
-  return merged;
-}
 
-function writeJson(file, value, { createOnly = false, mode } = {}) {
-  const dir = dirname(file);
-  mkdirSync(dir, { recursive: true });
-  const temporaryDir = mkdtempSync(join(dir, ".pi-write-"));
-  const temporaryFile = join(temporaryDir, "content.json");
-  try {
-    writeFileSync(temporaryFile, JSON.stringify(value, null, 2) + "\n", { mode: 0o600 });
-    if (mode !== undefined) chmodSync(temporaryFile, mode & 0o777);
-    // A hard link publishes the initialized template without replacing an existing one.
-    if (createOnly) linkSync(temporaryFile, file);
-    else renameSync(temporaryFile, file);
-  } finally {
-    rmSync(temporaryDir, { recursive: true, force: true });
+  const models = [defaultModel, ...enabledModels];
+  const presetIds = new Set(models.map(id => id.toLowerCase()));
+  // 同步预设命中的模型级思考设置，并去掉用户列表中同模型的旧条目。
+  for (const id of Object.keys(currentLevels)) {
+    if (presetIds.has(id.toLowerCase())) currentLevels[id] = defaultThinkingLevel;
   }
-}
-
-function writeSettings(action, seed) {
-  const { defaultModel: modelRef, enabledModels } = readPreset(seed);
-  const separator = modelRef.indexOf("/");
-  const preset = {
-    defaultProvider: modelRef.slice(0, separator),
-    defaultModel: modelRef.slice(separator + 1),
-    defaultThinkingLevel: defaultThinking,
-    enabledModels,
+  if (Object.keys(modelThinkingLevels).length > 0) {
+    current.modelThinkingLevels = { ...currentLevels, ...modelThinkingLevels };
+  }
+  const otherPatterns = currentModels.filter(pattern => !presetIds.has(pattern.replace(thinkingSuffix, "").toLowerCase()));
+  // Pi 的用户设置分开存提供方和模型，因此要拆开模板中的完整 ID。
+  const separator = defaultModel.indexOf("/");
+  // Pi 采用第一个匹配项，所以预设模型排在已有通配符前。
+  return {
+    ...current,
+    defaultProvider: defaultModel.slice(0, separator),
+    defaultModel: defaultModel.slice(separator + 1),
+    defaultThinkingLevel,
+    enabledModels: [...new Set([...models, ...otherPatterns])],
+    // 写入扩展路径后，直接运行 pi 也会加载服务层级钩子。
+    extensions: extensions.includes(extensionPath) ? extensions : [...extensions, extensionPath],
   };
+}
+
+function writeSettings(action) {
+  const preset = readPreset();
   const dir = agentDirectory();
   const file = join(dir, "settings.json");
   if (lstatSync(dir, { throwIfNoEntry: false })?.isSymbolicLink()) {
@@ -114,37 +63,51 @@ function writeSettings(action, seed) {
   const fileStat = lstatSync(file, { throwIfNoEntry: false });
   if (fileStat?.isSymbolicLink()) throw new Error(`拒绝写入符号链接：${file}`);
   if (fileStat && !fileStat.isFile()) throw new Error(`不是普通文件：${file}`);
-  const settings = action === "merge" && fileStat ? mergePreset(readJsonObject(file), preset) : preset;
-  writeJson(file, settings, { mode: fileStat?.mode });
-  console.log(`已${action === "merge" ? "合并" : "覆盖"}：${file}；默认 ${modelRef} + ${defaultThinking}。`);
+  // 合并以原设置为起点，覆盖从空对象开始。
+  const current = action === "merge" && fileStat ? readJsonObject(file) : {};
+  const settings = applyPreset(current, preset);
+
+  // 在目标目录下写好临时文件，再用 rename 一次性替换，避免留下只写了一半的设置。
+  mkdirSync(dir, { recursive: true });
+  const temporaryDir = mkdtempSync(join(dir, ".pi-write-"));
+  const temporaryFile = join(temporaryDir, "content.json");
+  try {
+    writeFileSync(temporaryFile, JSON.stringify(settings, null, 2) + "\n", { mode: 0o600 });
+    if (fileStat) chmodSync(temporaryFile, fileStat.mode & 0o777);
+    renameSync(temporaryFile, file);
+  } finally {
+    rmSync(temporaryDir, { recursive: true, force: true });
+  }
+  console.log(`已${action === "merge" ? "合并" : "覆盖"} ${file}。默认模型为 ${preset.defaultModel}，思考级别为 ${preset.defaultThinkingLevel}。`);
 }
 
 function runInteractive(command, args) {
+  // 把终端交给 Pi 或 vi，并把子进程的退出结果传回 Warp。
   const result = spawnSync(command, args, { stdio: "inherit" });
   if (result.error) throw result.error;
   if (result.signal) process.kill(process.pid, result.signal);
   else process.exitCode = result.status;
 }
 
-function editSettings() {
-  const dir = agentDirectory();
-  mkdirSync(dir, { recursive: true });
-  runInteractive("vi", [join(dir, "settings.json")]);
+function start(modelArg, thinkingArg) {
+  const { defaultModel, defaultThinkingLevel, modelThinkingLevels } = readPreset();
+  const selection = modelArg?.trim();
+  const level = thinkingArg?.trim();
+  const model = !selection || selection === "preset" ? defaultModel : selection;
+  const presetLevel = Object.hasOwn(modelThinkingLevels, model) ? modelThinkingLevels[model] : defaultThinkingLevel;
+  const thinking = !level || level === "preset" ? presetLevel : level;
+  if (!thinkingLevels.includes(thinking)) throw new Error(`无效的思考级别 ${thinking}。`);
+  runInteractive("pi", ["--model", model, "--thinking", thinking, "--extension", extensionPath]);
 }
 
-function startModel([modelArg, thinkingArg], seed) {
-  const selection = modelArg?.trim() || "preset";
-  const thinking = thinkingArg?.trim() || defaultThinking;
-  if (!thinkingLevels.includes(thinking)) throw new Error(`无效的思考级别：${thinking}`);
-  const model = selection === "preset" ? readPreset(seed).defaultModel : selection;
-  runInteractive("pi", ["--model", model, "--thinking", thinking]);
-}
-
-function run(command) {
-  try {
-    command();
-  } catch (error) {
-    console.error(`pi: ${error.message}`);
-    process.exitCode = 1;
-  }
+// 跳过 Node 和脚本路径，读取 Warp 传入的动作和参数。
+const [, , action, model, thinking] = process.argv;
+try {
+  if (action === "start") start(model, thinking);
+  else if (action === "edit") runInteractive("vi", [templatePath]);
+  else if (action === "merge" || action === "overwrite") writeSettings(action);
+  else throw new Error("用法为 node pi/warp.mjs start [model] [thinking]、edit、merge 或 overwrite。");
+} catch (error) {
+  console.error(`pi: ${error.message}`);
+  process.exitCode = 1;
 }

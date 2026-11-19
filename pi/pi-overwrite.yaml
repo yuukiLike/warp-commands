@@ -1,0 +1,8 @@
+---
+name: "pi overwrite"
+command: 'node "${WARP_COMMANDS_DIR:-$HOME/codex/warp-commands}/pi/warp.mjs" overwrite'
+description: "用预设覆盖 Pi 用户设置，旧设置会丢失。"
+arguments: []
+tags: ["pi", "settings", "overwrite", "preset"]
+source_url: "https://pi.dev/docs/latest/settings"
+shells: ["bash", "zsh"]

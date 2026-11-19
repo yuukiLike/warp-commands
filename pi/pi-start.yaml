@@ -1,0 +1,16 @@
+---
+name: "pi start"
+command: 'node "${WARP_COMMANDS_DIR:-$HOME/codex/warp-commands}/pi/warp.mjs" start "{{model}}" "{{thinking}}"'
+description: "按预设启动 Pi。"
+arguments:
+  - name: "model"
+    arg_type: "Text"
+    description: "provider/model 或 preset。"
+    default_value: "preset"
+  - name: "thinking"
+    arg_type: "Text"
+    description: "思考级别或 preset。"
+    default_value: "preset"
+tags: ["pi", "model", "start", "thinking"]
+source_url: "https://pi.dev/docs/latest/cli"
+shells: ["bash", "zsh"]

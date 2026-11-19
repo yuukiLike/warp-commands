@@ -1,0 +1,12 @@
+---
+name: "pi models"
+command: 'pi --list-models "{{filter}}"'
+description: "搜索 Pi 模型。"
+arguments:
+  - name: "filter"
+    arg_type: "Text"
+    description: "供应商或模型关键词。"
+    default_value: "openai"
+tags: ["pi", "models", "search"]
+source_url: "https://pi.dev/docs/latest/models"
+shells: ["bash", "zsh"]

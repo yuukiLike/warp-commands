@@ -17,12 +17,15 @@
 | --- | --- |
 | [pi start](pi-start.yaml) | 按预设启动，可临时指定模型或思考级别。 |
 | [pi model edit](pi-model-edit.yaml) | 用 `vi` 编辑模型预设。 |
+| [pi settings edit](pi-settings-edit.yaml) | 用 `vi` 打开用户设置，不应用模型预设。 |
 | [pi merge](pi-merge.yaml) | 合并预设，保留其他用户设置。 |
 | [pi overwrite](pi-overwrite.yaml) | 覆盖用户设置，旧设置无备份。 |
 | [pi models](pi-models.yaml) | 按关键词搜索模型。 |
 | [pi refresh](pi-refresh.yaml) | 刷新模型目录。 |
 
-直接运行 `pi` 时也想使用预设，先退出 Pi，再运行 `pi merge` 或 `pi overwrite`。默认写入 `~/.pi/agent/settings.json`，支持 `PI_CODING_AGENT_DIR`。Pi 启动时会通过扩展读取预设里的服务层级。项目设置、命令行参数或恢复的会话可以覆盖用户默认值。
+用户设置文件默认是 `~/.pi/agent/settings.json`，支持 `PI_CODING_AGENT_DIR`。用 `pi settings edit` 保存后，可回到 Pi 运行 `/reload`。
+
+直接运行 `pi` 时也想使用预设，先退出 Pi，再运行 `pi merge` 或 `pi overwrite`。Pi 启动时会通过扩展读取预设里的服务层级。项目设置、命令行参数或恢复的会话可以覆盖用户默认值。
 
 ## 新模型发布后
 

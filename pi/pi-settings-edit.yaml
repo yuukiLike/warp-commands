@@ -1,0 +1,8 @@
+---
+name: "pi settings edit"
+command: 'node "${WARP_COMMANDS_DIR:-$HOME/codex/warp-commands}/pi/warp.mjs" settings-edit'
+description: "用 vi 打开 Pi 用户设置 settings.json，不会应用仓库预设。"
+arguments: []
+tags: ["pi", "settings", "config", "edit"]
+source_url: "https://pi.dev/docs/latest/configuration"
+shells: ["bash", "zsh"]

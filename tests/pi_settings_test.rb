@@ -250,6 +250,38 @@ class PiSettingsTest < Minitest::Test
     assert_includes stderr, '拒绝写入符号链接'
   end
 
+  def test_settings_edit_opens_user_settings_without_reading_the_preset
+    stub_command('vi')
+    FileUtils.rm(@preset)
+    targets = { 'bash' => [{}, '.pi/agent'], 'zsh' => [{ 'PI_CODING_AGENT_DIR' => '~/custom agent' }, 'custom agent'] }
+    targets.each do |shell, (environment, directory)|
+      file = File.join(@home, directory, 'settings.json')
+      FileUtils.mkdir_p(File.dirname(file))
+      File.write(file, 'invalid JSON to repair')
+
+      stdout, stderr, status = run_named_workflow('settings-edit', shell, environment: environment)
+      assert status.success?, stderr
+      assert_equal "#{file}\n", stdout
+      assert_equal 'invalid JSON to repair', File.read(file)
+    end
+  end
+
+  def test_settings_edit_does_not_open_missing_files_or_directories
+    stub_command('vi')
+    file = File.join(@home, '.pi/agent/settings.json')
+    stdout, stderr, status = run_named_workflow('settings-edit', 'bash')
+    refute status.success?
+    assert_empty stdout
+    assert_includes stderr, "找不到 Pi 用户设置文件：#{file}"
+    refute File.exist?(File.dirname(file))
+
+    FileUtils.mkdir_p(file)
+    stdout, stderr, status = run_named_workflow('settings-edit', 'zsh')
+    refute status.success?
+    assert_empty stdout
+    assert_includes stderr, "不是普通文件：#{file}"
+  end
+
   def test_invalid_preset_never_touches_current_settings
     directory = File.join(@home, '.pi/agent')
     FileUtils.mkdir_p(directory)
@@ -322,7 +354,7 @@ class PiSettingsTest < Minitest::Test
   end
 
   def test_yaml_metadata_and_shell_syntax
-    expected_names = %w[start model-edit merge overwrite models refresh]
+    expected_names = %w[start model-edit settings-edit merge overwrite models refresh]
     assert_equal expected_names.sort, Dir[File.join(ROOT, 'pi/*.yaml')].map { |path| File.basename(path, '.yaml').delete_prefix('pi-') }.sort
     WORKFLOWS.each_value { |workflow| assert_equal [], workflow.fetch('arguments') }
     Dir[File.join(ROOT, 'pi/*.yaml')].each do |file|

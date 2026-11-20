@@ -1,6 +1,6 @@
 import { spawnSync } from "node:child_process";
 import {
-  chmodSync, lstatSync, mkdirSync, mkdtempSync, renameSync, rmSync, writeFileSync,
+  chmodSync, lstatSync, mkdirSync, mkdtempSync, renameSync, rmSync, statSync, writeFileSync,
 } from "node:fs";
 import { homedir } from "node:os";
 import { join, resolve } from "node:path";
@@ -89,6 +89,14 @@ function runInteractive(command, args) {
   else process.exitCode = result.status;
 }
 
+function editSettings() {
+  const file = join(agentDirectory(), "settings.json");
+  const stat = statSync(file, { throwIfNoEntry: false });
+  if (!stat) throw new Error(`找不到 Pi 用户设置文件：${file}`);
+  if (!stat.isFile()) throw new Error(`不是普通文件：${file}`);
+  runInteractive("vi", [file]);
+}
+
 function start(modelArg, thinkingArg) {
   const { defaultModel, defaultThinkingLevel, modelThinkingLevels } = readPreset();
   const selection = modelArg?.trim();
@@ -105,8 +113,9 @@ const [, , action, model, thinking] = process.argv;
 try {
   if (action === "start") start(model, thinking);
   else if (action === "edit") runInteractive("vi", [templatePath]);
+  else if (action === "settings-edit") editSettings();
   else if (action === "merge" || action === "overwrite") writeSettings(action);
-  else throw new Error("用法为 node pi/warp.mjs start [model] [thinking]、edit、merge 或 overwrite。");
+  else throw new Error("用法为 node pi/warp.mjs start [model] [thinking]、edit、settings-edit、merge 或 overwrite。");
 } catch (error) {
   console.error(`pi: ${error.message}`);
   process.exitCode = 1;

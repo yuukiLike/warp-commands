@@ -1,0 +1,480 @@
+---
+name: "setup mac wifi check"
+command: |-
+  /bin/bash <<'INSTALL_WIFI_CHECK'
+  set -e
+
+  if [[ "$(/usr/bin/uname -s)" != Darwin ]]; then
+      printf '%s\n' '请在 Mac 本机运行安装工作流。' >&2
+      exit 1
+  fi
+
+  wifi_bin="$HOME/.local/bin"
+  wifi_target="$wifi_bin/wifi-check"
+  /bin/mkdir -p "$wifi_bin"
+
+  if [[ -L "$wifi_target" ]] || {
+      [[ -e "$wifi_target" ]] && ! /usr/bin/grep -Fxq '# Installed by the Warp Commands wifi-check installer.' "$wifi_target"
+  }; then
+      printf '已有同名命令，请先检查 %s。\n' "$wifi_target" >&2
+      exit 1
+  fi
+
+  wifi_stage=$(/usr/bin/mktemp "$wifi_bin/.wifi-check.XXXXXX")
+  trap '/bin/rm -f "$wifi_stage"' EXIT
+  /bin/cat >"$wifi_stage" <<'WIFI_CHECK_SCRIPT'
+  #!/bin/bash
+  # Installed by the Warp Commands wifi-check installer.
+  if [[ "$(/usr/bin/uname -s)" != Darwin ]]; then
+      printf '%s\n' '请在这台 Mac 的本地 Warp 终端运行 mac wifi check。'
+      exit 0
+  fi
+
+  export LC_ALL=C
+  details=no
+  target=''
+  dns_label='[[:alnum:]]([[:alnum:]-]{0,61}[[:alnum:]])?'
+  domain_pattern="^${dns_label}(\.${dns_label})+$"
+
+  usage() {
+      printf '%s\n' \
+          '用法 wifi-check [--details] [域名]' \
+          '  --details  显示当前接入点和近 2 小时的重连记录' \
+          '  域名       查询 A/AAAA，检查当前路由上的 HTTPS 和各阶段耗时' \
+          '目标 HTTPS 请求跳过显式代理，沿用当前路由。'
+  }
+
+  for argument in "$@"; do
+      case "$argument" in
+          -h|--help) usage; exit 0 ;;
+          --details) details=yes ;;
+          *)
+              name=${argument%.}
+              if [[ -n "$target" || ${#name} -gt 253 || ! "$name" =~ $domain_pattern || "$name" =~ ^[0-9.]+$ ]]; then
+                  printf '%s\n' '请只传入一个域名，例如 wifi-check app.warp.dev。' >&2
+                  usage >&2
+                  exit 2
+              fi
+              target=$name
+              ;;
+      esac
+  done
+
+  probe_host=captive.apple.com
+  probe_url="http://$probe_host/hotspot-detect.html"
+  location=$(/usr/sbin/networksetup -getcurrentlocation 2>/dev/null)
+  address=''
+  gateway=''
+  system_status=''
+  https_headers=''
+
+  report() {
+      local redirect=''
+      printf '%s\n' "$2"
+      if [[ -n "$location" || -n "$wifi" ]]; then
+          printf '网络位置 %s · IPv4 %s · 网关 %s\n' "${location:-—}" "${address:-—}" "${gateway:-—}"
+      fi
+      if [[ -n "$system_status" ]]; then
+          printf '系统 DNS %s' "${system_dns:-—}"
+          if [[ -n "$lease_dns" && "$lease_dns" != "$system_dns" ]]; then
+              printf '（Wi-Fi 分配 %s）' "$lease_dns"
+          fi
+          printf ' · 系统代理 %s · 1.1.1.1 路由 %s\n' "$proxy_state" "${tunnel_route:-—}"
+          printf 'Apple HTTP 直连 %s · 系统 %s\n' \
+              "$(probe_detail "$direct_status" "$wifi_response")" \
+              "$(probe_detail "$system_status" "$system_response")"
+          if [[ "$direct_status" == redirect ]]; then
+              redirect=$(redirect_host "$wifi_response")
+          fi
+          if [[ -n "$redirect" ]]; then
+              printf 'Wi-Fi 直连跳转域名 %s\n' "$redirect"
+          elif [[ "$system_status" == redirect ]]; then
+              redirect=$(redirect_host "$system_response")
+              if [[ -n "$redirect" ]]; then printf '系统请求跳转域名 %s\n' "$redirect"; fi
+          fi
+          if [[ -n "$https_headers" ]]; then
+              local https_host="${https_url#https://}" https_status=failed
+              if [[ "$https_reachable" == yes ]]; then https_status=success; fi
+              printf 'HTTPS 复核 %s %s\n' "${https_host%%/*}" "$(probe_detail "$https_status" "$https_headers")"
+          fi
+      fi
+      if [[ -n "$3" ]]; then
+          printf '\n%s\n' "$3"
+      fi
+      if [[ "$1" == login ]]; then
+          printf '\n%s\n' "$probe_url"
+      fi
+      if [[ -n "$target" && "$link" == active ]]; then
+          report_target "$target"
+      fi
+      if [[ "$details" == yes && -n "$wifi" ]]; then
+          printf '\n'
+          if [[ "$link" == active ]]; then report_access_point "$wifi"; fi
+          report_connection_history "$wifi"
+      fi
+      if [[ "$details" == no && -z "$target" ]]; then
+          printf '\n%s\n' '看详情 wifi-check --details · 查指定域名 wifi-check app.warp.dev'
+      fi
+      exit 0
+  }
+
+  route_interface() {
+      local family=-inet
+      if [[ "$1" == *:* ]]; then family=-inet6; fi
+      /sbin/route -n get "$family" "$1" 2>/dev/null | /usr/bin/awk '/interface:/ {print $2; exit}'
+  }
+
+  http_status() {
+      printf '%s\n' "$1" | /usr/bin/awk '/^HTTP\/[0-9.]+[[:space:]]+[0-9][0-9][0-9]/ {status=$2} END {print status}'
+  }
+
+  redirect_host() {
+      printf '%s\n' "$1" | /usr/bin/awk '
+          /^HTTP\/[0-9.]+[[:space:]]+/ {status=$2+0; next}
+          status >= 200 && /^[[:space:]]*$/ {exit}
+          (status >= 300 && status < 400 || status == 511) && tolower($0) ~ /^location:/ {
+              host=$0
+              sub(/^[^:]+:[[:space:]]*/, "", host)
+              if (tolower(host) ~ /^https?:\/\//) sub(/^[^:]+:\/\//, "", host)
+              else if (host ~ /^\/\//) sub(/^\/\//, "", host)
+              else exit
+              sub(/[\/?#[:space:]].*$/, "", host)
+              sub(/^.*@/, "", host)
+              if (host ~ /^[[:alnum:].-]+(:[0-9]+)?$/ || host ~ /^\[[[:xdigit:]:.]+\](:[0-9]+)?$/) {
+                  sub(/:[0-9]+$/, "", host)
+                  print tolower(host)
+              }
+              exit
+          }
+      '
+  }
+
+  timed_probe() {
+      local TIMEFORMAT=$'\n%3R'
+      { time "$@" 2>/dev/null; } 2>&1
+  }
+
+  probe_detail() {
+      local status="$1" response="$2" code
+      case "$status" in
+          success) printf '通过' ;;
+          redirect) printf '重定向' ;;
+          unexpected-page) printf '内容不符' ;;
+          failed) printf '未通过' ;;
+          *) printf '未测'; return ;;
+      esac
+      code=$(http_status "$response")
+      if [[ -n "$code" ]]; then
+          printf '（HTTP %s，%s 秒）' "$code" "${response##*$'\n'}"
+      else
+          printf '（%s 秒）' "${response##*$'\n'}"
+      fi
+  }
+
+  response_status() {
+      local output="$1" status
+      status=$(http_status "$output")
+      case "$status" in
+          200)
+              if printf '%s\n' "$output" | /usr/bin/tr -d '[:space:]' | /usr/bin/grep -Fiq '<body>Success</body>'; then
+                  printf 'success'
+              else
+                  printf 'unexpected-page'
+              fi
+              ;;
+          3[0-9][0-9]|511) printf 'redirect' ;;
+          *) printf 'failed' ;;
+      esac
+  }
+
+  report_target_dns() {
+      local name="$1" type="$2" resolver="$3" reply status addresses first millis iface
+      if ! reply=$(/usr/bin/dig "@$resolver" "$name." "$type" +tries=1 +time=1 +noall +comments +answer +stats 2>/dev/null); then
+          printf '  %s 查询未收到回应\n' "$type"
+          return
+      fi
+      IFS='|' read -r status addresses first millis <<<"$(printf '%s\n' "$reply" | /usr/bin/awk -v type="$type" '
+          /^;; ->>HEADER<<-/ {
+              for (field=1; field<NF; field++) if ($field == "status:") status=$(field+1)
+              sub(/,$/, "", status)
+          }
+          $4 == type && $5 ~ /^[[:xdigit:]:.]+$/ {
+              if (count++ == 0) first=$5
+              if (count <= 3) addresses=addresses (count > 1 ? ", " : "") $5
+          }
+          /^;; Query time:/ {millis=$4}
+          END {
+              if (count > 3) addresses=addresses ", …"
+              printf "%s|%s|%s|%s\n", status, addresses, first, millis
+          }
+      ')"
+      printf '  %s %s' "$type" "${status:-未读取}"
+      if [[ -n "$first" ]]; then
+          printf ' · %s' "$addresses"
+          iface=$(route_interface "$first")
+          if [[ -n "$iface" ]]; then printf ' · 首个地址路由 %s' "$iface"; fi
+      elif [[ "$status" == NOERROR ]]; then
+          printf ' · 无记录'
+      fi
+      if [[ -n "$millis" ]]; then printf ' · %s ms' "$millis"; fi
+      printf '\n'
+  }
+
+  report_target() {
+      local name="$1" resolver="${system_dns%%,*}" timing result=0 ip iface=''
+      printf '\n目标 %s\n' "$name"
+      if [[ -n "$resolver" ]]; then
+          printf '  查询 DNS %s\n' "$resolver"
+          report_target_dns "$name" A "$resolver"
+          report_target_dns "$name" AAAA "$resolver"
+      else
+          printf '  暂未读取到 macOS 的 DNS 服务器。\n'
+      fi
+
+      # Curl follows the active routes, including tunnels, without using an explicit proxy.
+      timing=$(/usr/bin/curl -q --noproxy '*' --head --silent --output /dev/null \
+          --connect-timeout 4 --max-time 8 \
+          --write-out '%{remote_ip}|%{http_code}|%{time_namelookup}|%{time_connect}|%{time_appconnect}|%{time_starttransfer}|%{time_total}\n' \
+          "https://$name/") || result=$?
+      ip=${timing%%|*}
+      if [[ -n "$ip" ]]; then iface=$(route_interface "$ip"); fi
+      printf '%s\n' "$timing" | /usr/bin/awk -F'|' -v result="$result" -v iface="$iface" '
+          function elapsed(end, start) {
+              if (end <= 0 || end < start) return "—"
+              return sprintf("%.0f ms", (end - start) * 1000)
+          }
+          NF == 7 {
+              if (result == 0) status="HTTP " $2
+              else if (result == 6) status="DNS 解析失败"
+              else if (result == 7) status="TCP 连接失败"
+              else if (result == 28) {
+                  if ($3+0 == 0) stage="DNS"
+                  else if ($4+0 == 0) stage="TCP"
+                  else if ($5+0 == 0) stage="TLS"
+                  else stage="等待响应"
+                  status=stage "超时"
+              }
+              else if (result == 35 || result == 60) status="TLS 握手或证书验证失败"
+              else status="请求失败（curl " result "）"
+              printf "  HTTPS HEAD %s", status
+              if ($1 != "") printf " · 对端 %s · 路由 %s", $1, (iface != "" ? iface : "—")
+              printf "\n  耗时 DNS %s · TCP %s · TLS %s · 首字节 %s · 总计 %s\n",
+                     elapsed($3+0,0), elapsed($4+0,$3+0), elapsed($5+0,$4+0), elapsed($6+0,$5+0), elapsed($7+0,0)
+              reported=1
+          }
+          END {if (!reported) print "  HTTPS 探测未取得结果（curl " result "）"}
+      '
+  }
+
+  report_access_point() {
+      /usr/sbin/system_profiler SPAirPortDataType -detailLevel basic -timeout 5 2>/dev/null | /usr/bin/awk -v wifi="$1" '
+          {
+              indent=match($0, /[^[:space:]]/)
+              if ($1 == wifi ":") {device=indent; next}
+              if (!device || !indent) next
+              if (indent <= device && /:[[:space:]]*$/) exit
+              if (/^[[:space:]]*Current Network Information:/) {network=indent; next}
+              if (!network) next
+              if (indent <= network) exit
+
+              value=$0
+              sub(/^[[:space:]]*[^:]*:[[:space:]]*/, "", value)
+              if (/^[[:space:]]*Channel:/) channel=value
+              if (/^[[:space:]]*Signal \/ Noise:/) signal=value
+              if (/^[[:space:]]*PHY Mode:/) phy=value
+              if (/^[[:space:]]*BSSID:/ && value ~ /^([[:xdigit:]][[:xdigit:]]:){5}[[:xdigit:]][[:xdigit:]]$/) bssid=value
+          }
+          END {
+              if (channel == "" && signal == "" && bssid == "") {
+                  print "当前接入点信息暂不可读。"
+                  exit
+              }
+              printf "当前接入点 信道 %s · BSSID %s", (channel != "" ? channel : "—"), (bssid != "" ? bssid : "未提供")
+              if (phy != "") printf " · %s", phy
+              if (signal != "") {
+                  printf "\n信号/噪声 %s", signal
+                  if (signal ~ /^-[0-9]+ dBm \/ -[0-9]+ dBm$/) {
+                      split(signal, dbm, " ")
+                      printf " · 信噪比 %d dB", dbm[1] - dbm[4]
+                  }
+              }
+              printf "\n"
+          }
+      '
+  }
+
+  report_connection_history() {
+      local wifi="$1" events
+      if [[ ! "$wifi" =~ ^en[0-9]+$ ]] ||
+          ! events=$(/usr/bin/log show --last 2h --info --style compact --predicate \
+              "(process == \"configd\" AND (eventMessage == \"$wifi link ACTIVE\" OR eventMessage CONTAINS \"DHCP $wifi: publish success\")) OR (process == \"Captive Network Assistant\" AND (eventMessage CONTAINS \"Assistant registered as the websheet app\" OR eventMessage CONTAINS[c] \"Probe Succeeded\"))" 2>/dev/null); then
+          printf '近 2 小时的重连记录暂不可读。\n'
+          return
+      fi
+      printf '%s\n' "$events" | /usr/bin/awk -v wifi="$wifi" '
+          $1 ~ /^[0-9]+-[0-9]+-[0-9]+$/ && $2 ~ /^[0-9]+:[0-9]+:[0-9]+/ {
+              stamp=substr($1,6) " " $2
+              if ($4 ~ /^configd\[/ && $0 ~ (" " wifi " link ACTIVE$")) {
+                  link=stamp
+                  ipv4=""
+              } else if ($4 ~ /^configd\[/ && index($0, "DHCP " wifi ": publish success { IPv4") && link != "" && ipv4 == "") {
+                  ipv4=stamp
+              } else if (index($0, "Assistant registered as the websheet app")) {
+                  auth=stamp
+                  success=""
+              } else if (auth != "" && index(tolower($0), "probe succeeded")) {
+                  success=stamp
+              }
+          }
+          END {
+              if (link == "") print "近 2 小时未发现重连记录。"
+              else printf "最近重连 %s 无线连接 · %s\n", link, (ipv4 != "" ? ipv4 " DHCP 发布 IPv4" : "未找到 DHCP 发布 IPv4 的记录")
+              if (auth != "") {
+                  printf "系统网络认证日志 %s 开始 · %s\n", auth, (success != "" ? success " 探测成功" : "未找到探测成功记录")
+              }
+          }
+      '
+  }
+
+  wifi=$(/usr/sbin/networksetup -listallhardwareports 2>/dev/null | /usr/bin/awk '
+      /^Hardware Port: (Wi-Fi|AirPort)$/ {found=1; next}
+      found && /^Device:/ {print $2; exit}
+  ')
+  if [[ -z "$wifi" ]]; then
+      report close '暂时无法读取 Wi-Fi 接口。' '打开「系统设置 → Wi-Fi」，确认 Wi-Fi 已开启。'
+  fi
+
+  link=$(/sbin/ifconfig "$wifi" 2>/dev/null | /usr/bin/awk '/status:/ {print $2; exit}')
+  if [[ "$link" != active ]]; then
+      report close 'Wi-Fi 尚未连接。' '在 Wi-Fi 菜单选择要加入的网络。'
+  fi
+
+  reconnect_action='在 Wi-Fi 菜单重新连接一次。'
+  if /usr/sbin/networksetup -listlocations 2>/dev/null | /usr/bin/grep -Fxq 'Wi-Fi 还原'; then
+      reconnect_action='切到「Wi-Fi 还原」后重新连接一次。'
+  fi
+
+  system_dns=$(/usr/sbin/scutil --dns 2>/dev/null | /usr/bin/awk '
+      /^DNS configuration \(for scoped queries\)/ {exit}
+      /^resolver #1$/ {first=1; next}
+      first && /^resolver #/ {exit}
+      first && /^[[:space:]]+nameserver\[/ {
+          if (count++) printf ","
+          printf "%s", $NF
+      }
+  ')
+  address=$(/usr/sbin/ipconfig getifaddr "$wifi" 2>/dev/null)
+  case "$address" in
+      ''|169.254.*)
+          report close 'Wi-Fi 已连上，还没拿到可用的 IPv4 地址。' "$reconnect_action 一直拿不到地址时，可以先用手机热点。"
+          ;;
+  esac
+  gateway=$(/usr/sbin/ipconfig getoption "$wifi" router 2>/dev/null | /usr/bin/awk 'NF {print $1; exit}')
+  if [[ -z "$gateway" ]]; then
+      gateway=$(/sbin/route -n get -ifscope "$wifi" default 2>/dev/null | /usr/bin/awk '/gateway:/ {print $2; exit}')
+  fi
+  proxy_state='未读取'
+  if proxy_config=$(/usr/sbin/scutil --proxy 2>/dev/null); then
+      proxy_state=$(printf '%s\n' "$proxy_config" | /usr/bin/awk '
+          $1 ~ /^(HTTPEnable|HTTPSEnable|SOCKSEnable|ProxyAutoConfigEnable|ProxyAutoDiscoveryEnable)$/ && $NF == 1 {enabled=1; exit}
+          END {print enabled ? "开启" : "关闭"}
+      ')
+  fi
+  tunnel_route=$(route_interface 1.1.1.1)
+  pause_action=''
+  login_action='打开下方的联网检测页，完成网络认证。'
+  if [[ "$proxy_state" == '开启' || "$tunnel_route" == utun* ]]; then
+      pause_action='先暂停代理（包括系统代理和虚拟网卡），再'
+      login_action="${pause_action}${login_action}登录成功后，可以恢复代理。"
+  fi
+
+  # Resolve through a DNS server advertised by Wi-Fi that is reachable on that interface.
+  dns_servers=$(/usr/sbin/ipconfig getoption "$wifi" domain_name_server 2>/dev/null)
+  lease_dns=$(printf '%s' "$dns_servers" | /usr/bin/tr -s '[:space:]' ',')
+  lease_dns=${lease_dns%,}
+  wifi_response=''
+  direct_status=unverified
+  checked_resolvers=0
+  for resolver in $dns_servers; do
+      [[ "$resolver" =~ ^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$ ]] || continue
+      [[ "$(route_interface "$resolver")" == "$wifi" ]] || continue
+      checked_resolvers=$((checked_resolvers + 1))
+      probe_addresses=$(/usr/bin/dig -4 "@$resolver" +time=1 +tries=1 +short "$probe_host" A 2>/dev/null | /usr/bin/awk '
+          /^[0-9]+\.[0-9]+\.[0-9]+\.[0-9]+$/ && !/^(127|0)\./ && !/^198\.(18|19)\./ {
+              if (count++) printf ","
+              printf "%s", $0
+              if (count == 3) exit
+          }
+      ')
+      if [[ -n "$probe_addresses" ]]; then
+          wifi_response=$(timed_probe /usr/bin/curl -q -4 --noproxy '*' --interface "if!$wifi" \
+              --resolve "$probe_host:80:$probe_addresses" --include --silent \
+              --connect-timeout 2 --max-time 4 --max-filesize 65536 "$probe_url")
+          direct_status=$(response_status "$wifi_response")
+          break
+      fi
+      [[ "$checked_resolvers" -lt 2 ]] || break
+  done
+
+  # Exercise the active macOS networking configuration independently of the direct probe.
+  system_response=$(timed_probe /usr/bin/nscurl --ignore-location --include --max-time 5 --output - "$probe_url")
+  system_status=$(response_status "$system_response")
+
+  # A public network or proxy can handle HTTP and HTTPS differently.
+  https_reachable=no
+  if [[ "$system_status" != success ]]; then
+      for https_url in https://www.apple.com.cn/robots.txt https://www.baidu.com/robots.txt; do
+          if https_headers=$(timed_probe /usr/bin/nscurl --ignore-location --dump-header - --max-time 4 --output /dev/null "$https_url"); then
+              case "$(http_status "$https_headers")" in
+                  [23][0-9][0-9])
+                      https_reachable=yes
+                      break
+                      ;;
+              esac
+          fi
+      done
+  fi
+
+  if [[ "$(/usr/sbin/ipconfig getifaddr "$wifi" 2>/dev/null)" != "$address" ]]; then
+      report close '自检期间 Wi-Fi 地址变了。' '等 Wi-Fi 连稳后，再运行一次自检。'
+  fi
+
+  if [[ "$system_status" == success ]]; then
+      report close 'Apple 联网检测通过。' ''
+  fi
+
+  if [[ "$https_reachable" == yes ]]; then
+      case "$system_status" in
+          redirect) detail='Apple 的 HTTP 检测页发生了重定向。' ;;
+          unexpected-page) detail='Apple 的 HTTP 检测页返回了不同的内容。' ;;
+          *) detail='Apple 的 HTTP 检测页这次没有可用响应。' ;;
+      esac
+      report close 'HTTPS 联网检测通过。' "$detail 你正在用的网页和应用正常时，可以继续使用。"
+  fi
+
+  if [[ "$direct_status" == redirect || ( "$direct_status" != success && "$system_status" == redirect ) ]]; then
+      report login 'Wi-Fi 已拿到 IP，联网检测提示可能需要网络认证。' "$login_action"
+  fi
+
+  if [[ "$direct_status" == success ]]; then
+      if [[ -n "$pause_action" ]]; then
+          report close 'Wi-Fi 直连测试通过。按 macOS 设置发出的测试请求未通过，且检测到代理或隧道。' "如果网页也打不开，${pause_action}重试。"
+      fi
+      report close 'Wi-Fi 直连测试通过。按 macOS 设置发出的测试请求未通过。' "如果网页也打不开，$reconnect_action"
+  fi
+
+  if [[ "$direct_status" == unexpected-page || "$system_status" == unexpected-page ]]; then
+      report login '联网检测收到非预期网页，可能是网络认证页。' "$login_action"
+  fi
+
+  report login 'Wi-Fi 已拿到 IP，这次探测未能确认外网连通。' "网页也打不开时，$login_action 检测页仍打不开的话，可以先用手机热点。"
+  WIFI_CHECK_SCRIPT
+  /bin/bash -n "$wifi_stage"
+  /bin/chmod 0755 "$wifi_stage"
+  /bin/mv -f "$wifi_stage" "$wifi_target"
+  printf '%s\n' 'Wi-Fi 自检已安装。' '日常使用 Warp 的「mac wifi check」，或运行 ~/.local/bin/wifi-check。'
+  INSTALL_WIFI_CHECK
+description: "在当前 Mac 安装或更新 wifi-check。之后直接运行短命令进行只读网络自检。"
+arguments: []
+tags: ["setup", "macos", "network", "wifi"]
+shells: ["bash", "zsh"]

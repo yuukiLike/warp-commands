@@ -6,7 +6,7 @@
 
 1. 在 Warp Drive → 个人空间 **+ → Import** 中，按需选择下表对应的 YAML。`README.md` 是说明文档，不需要导入。
 2. 在 Warp 的工作流搜索中搜索下面的安装名称，选择并执行。
-3. 看到安装成功提示后，使用下表中的命令或快捷键。Shell 短命令在当前终端立即可用，新开的终端也会自动加载。
+3. 看到安装成功提示后，使用下表中的命令或快捷键。
 
 文件名以 `install-` 开头：Warp 搜索按命中位置排序，越靠前排名越高。这样输入 `obsidian`、`projects` 时，命令文件（如 `mac/obsidian.yaml`）排在安装文件之前，两者不会互相抢位；想找安装文件时搜索 `install` 或 `setup`。
 
@@ -15,6 +15,7 @@
 | [`setup obsidian`](install-obsidian.yaml) | Obsidian 笔记库入口 | `cnotes` |
 | [`setup projects`](install-projects.yaml) | eza 与项目概览命令 | `projects` |
 | [`setup projects pull`](install-projects-pull.yaml) | 批量更新各项目的本地 `main` | `projects-pull` |
+| [`setup mac wifi check`](install-wifi-check.yaml) | macOS Wi-Fi 只读自检 | `mac wifi check` 工作流或 `~/.local/bin/wifi-check` |
 | [`setup zed`](install-zed.yaml) | Zed 通用任务与快捷键，当前提供 HTML 浏览器任务 | 在 Zed 的 HTML 文件中按 `⌘⌃B` |
 
 这些工作流可以独立安装，不需要填写仓库路径或切换到源码目录。`setup projects` 先检测 `eza`：已有时提示跳过；缺少时先显示将执行 `brew install eza`，再通过 Homebrew 安装。如果 `brew` 也没有，会提示先安装 Homebrew 并停止。依赖安装方式参考 [eza 官方说明](https://eza.rocks/#installation)。`setup projects pull` 只需要 Git 和 Zsh，不依赖 `eza` 或 `projects`。
@@ -30,7 +31,8 @@
 | `~/.config/warp-commands/obsidian.zsh` | `cnotes` 的函数定义 |
 | `~/.config/warp-commands/projects.zsh` | `projects` 的函数定义 |
 | `~/.config/warp-commands/projects-pull.zsh` | `projects-pull` 的函数定义 |
-| `~/.zshrc` | 每个 Shell 工具一行 `source`，让新终端加载函数 |
+| `~/.local/bin/wifi-check` | Wi-Fi 自检可执行文件 |
+| `~/.zshrc` | 加载 `cnotes`、`projects` 和 `projects-pull` 函数 |
 | `~/.config/zed/tasks.json` | Zed 全局任务 |
 | `~/.config/zed/keymap.json` | Zed 用户快捷键 |
 
@@ -46,10 +48,15 @@ Shell 工具设置了 `ZDOTDIR` 时，加载行写入该目录下的 `.zshrc`。
 | `projects "$HOME/explore"` | 查看指定父目录下的项目 |
 | `projects-pull` | 从 `origin/main` 更新 `~/codex` 各项目的本地 `main`，保留当前分支 |
 | `projects-pull "$HOME/explore"` | 更新指定父目录下各项目的本地 `main` |
+| `~/.local/bin/wifi-check` | 检查 Wi-Fi，显示连接参数、探测耗时和下一步 |
 
 `cnotes` 使用每台 Mac 自己的 `$HOME`。先在该 Mac 开启 iCloud Drive，并确认 `iCloud 云盘 → Obsidian` 下已经同步好对应笔记库。
 
 `projects` 排除 `node_modules`，支持目录名中的空格，并遵循 `NO_COLOR` 设置。安装后，也可以通过 [projects 工作流](../mac/projects.yaml) 填写目录并调用。
+
+如果 `~/.local/bin` 在 `PATH` 中，可以直接输入 `wifi-check`。也可以导入 [mac wifi check 工作流](../mac/mac-wifi-check.yaml)，从 Warp 搜索运行。
+
+运行 `wifi-check app.warp.dev` 查询目标域名的 A/AAAA、路由接口和 HTTPS 各阶段耗时。目标 HTTPS 请求跳过显式代理，沿用当前路由。加 `--details` 可查看当前接入点、信号和近 2 小时的重连记录。需要网络认证时，自检会给出可手动打开的联网检测页。
 
 ## Zed 通用配置
 
@@ -104,11 +111,11 @@ Shell 工具设置了 `ZDOTDIR` 时，加载行写入该目录下的 `.zshrc`。
 
 仓库里的 YAML 是源文件，Warp 导入的是副本。修改 YAML 后，先更新 Warp 中的对应工作流，再在各台 Mac 上重新执行安装，新的命令定义或应用配置才会写入该机器。Warp Drive 同步工作流内容；Zed 本地配置的修改不会自动回写到工作流或仓库。参见 [Warp Drive 同步机制](https://docs.warp.dev/knowledge-and-collaboration/warp-drive/)。
 
-卸载某个 Shell 快捷命令时，从 `.zshrc` 删除该工具的 `# Warp Commands:` 注释及下一行 `source`，然后新开终端。`eza` 软件仍保留。
+卸载函数形式的 Shell 快捷命令时，从 `.zshrc` 删除该工具的 `# Warp Commands:` 注释及下一行 `source`，然后新开终端。卸载 `wifi-check` 时删除 `~/.local/bin/wifi-check`。
 
 ## 如何阅读与修改代码
 
-每个安装工作流完整保存在一个 YAML 中。Shell 快捷命令安装器的 `command` 按编号从上到下执行：
+每个安装工作流完整保存在一个 YAML 中。安装 Shell 函数的工作流按以下顺序执行：
 
 1. **检查配置与依赖**：先处理无法写入配置、找不到 eza 等情况。
 2. **保存日常命令**：`<<'ZSH'` 与下一行独立的 `ZSH` 之间，是将来运行的函数定义。这里的 `$HOME` 和参数会保留到调用函数时再展开。

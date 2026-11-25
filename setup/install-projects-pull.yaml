@@ -138,20 +138,6 @@ command: |-
         fi
       fi
 
-      # 当前在 main 时会更新工作区，必须干净；其他分支的未提交改动不受影响。
-      if [[ "$current_ref" == refs/heads/main ]]; then
-        if ! working_changes=$(git -C "$project" status --porcelain --untracked-files=normal --ignore-submodules=none); then
-          printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'failed: cannot inspect working tree'
-          (( failed += 1 ))
-          continue
-        fi
-        if [[ -n "$working_changes" ]]; then
-          printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'skipped: main has uncommitted changes'
-          (( skipped += 1 ))
-          continue
-        fi
-      fi
-
       if [[ "$main_before" == "$remote_main" ]]; then
         printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'up to date'
         (( unchanged += 1 ))
@@ -177,6 +163,17 @@ command: |-
       fi
 
       if [[ "$current_ref" == refs/heads/main ]]; then
+        # 快进当前 main 会更新工作区，先确认没有未提交改动。
+        if ! working_changes=$(git -C "$project" status --porcelain --untracked-files=normal --ignore-submodules=none); then
+          printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'failed: cannot inspect working tree'
+          (( failed += 1 ))
+          continue
+        fi
+        if [[ -n "$working_changes" ]]; then
+          printf '%-24s %-24s %s\n' "$project_name" "$current_branch" 'skipped: main has uncommitted changes'
+          (( skipped += 1 ))
+          continue
+        fi
         git_output=$(git -C "$project" merge --ff-only --no-squash --no-autostash --no-edit --no-stat "$remote_main" 2>&1)
       else
         # 仅移动 main 引用，不切换分支或触碰工作区。旧值也必须匹配，避免覆盖并发提交。

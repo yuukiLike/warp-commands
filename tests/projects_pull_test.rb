@@ -105,18 +105,20 @@ class ProjectsPullTest < Minitest::Test
     assert_equal 'feature', git('-C', repo, 'branch', '--show-current').strip
   end
 
-  def test_diverged_main_is_preserved_and_later_projects_continue
+  def test_diverged_dirty_main_is_preserved_and_later_projects_continue
     divergent = clone_project('a-divergent')
     healthy = clone_project('z-healthy')
     git('-C', divergent, 'commit', '--allow-empty', '-m', 'local commit')
-    local_main = revision(divergent, 'main')
+    File.write(File.join(divergent, 'file.txt'), "local edit\n")
+    before = working_state(divergent)
     target = advance_remote
 
     stdout, _stderr, result = pull
 
     assert_equal 1, result.exitstatus
+    assert_includes stdout, 'main has local commits; kept'
     assert_includes stdout, '跳过 1'
-    assert_equal local_main, revision(divergent, 'main')
+    assert_equal before, working_state(divergent)
     assert_equal target, revision(healthy, 'main')
   end
 
@@ -140,6 +142,20 @@ class ProjectsPullTest < Minitest::Test
     assert result.success?, stdout + stderr
     assert_includes stdout, '已是最新 1'
     assert_equal @initial, revision(repo, 'main')
+  end
+
+  def test_unchanged_dirty_main_reports_up_to_date
+    repo = clone_project('unchanged dirty main')
+    File.write(File.join(repo, 'file.txt'), "local edit\n")
+    File.write(File.join(repo, 'untracked.txt'), "keep\n")
+    before = working_state(repo)
+
+    stdout, stderr, result = pull
+
+    assert result.success?, stdout + stderr
+    assert_includes stdout, 'up to date'
+    assert_includes stdout, '已是最新 1'
+    assert_equal before, working_state(repo)
   end
 
   def test_detached_head_and_its_changes_are_preserved
